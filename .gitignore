@@ -1,0 +1,11 @@
+out
+dist
+node_modules
+.vscode-test/
+*.vsix
+
+.vscode/**
+.vscode-test/**
+.yarnrc
+vsc-extension-quickstart.md
+**/.eslintrc.json

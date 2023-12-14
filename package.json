@@ -1,0 +1,72 @@
+{
+  "name": "guabaovlang",
+  "displayName": "GuaBaoVLang",
+  "description": "GuaBao Verification Language and Tools",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:guabao",
+    "onCommand:guabaovlang.greet"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "gbCustom.guabao",
+        "displayName": "GuaBao",
+        "selector": [
+          {
+            "filenamePattern": "*.gcl"
+          }
+        ]
+      }
+    ],
+    "language": [
+      {
+        "id": "guabao",
+        "extensions": [
+          ".gcl",
+          ".guabao"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "guabao",
+        "scopeName": "source.gcl",
+        "path": "./syntaxes/guabao.tmGrammar.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "guabaovlang.greet",
+        "title": "GuaBao Greet"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "18.x",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.2",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^2.3.8"
+  }
+}
