@@ -47,7 +47,37 @@
       {
         "command": "guabaovlang.greet",
         "title": "GuaBao Greet"
+      },
+      {
+        "command": "guabaovlang.start",
+        "title": "GuaBao Start"
+      },
+      {
+        "command": "guabaovlang.stop",
+        "title": "GuaBao Stop"
+      },
+      {
+        "command": "guabaovlang.restart",
+        "title": "GuaBao Restart"
+      },
+      {
+        "command": "guabaovlang.refine",
+        "title": "GuaBao Refine"
+      },
+      {
+        "command": "guabaovlang.debug",
+        "title": "GuaBao Debug"
+      },
+      {
+        "command": "guabaovlang.vcgen",
+        "title": "GuaBao Generate VC"
+      },
+      {
+        "command": "guabaovlang.solve",
+        "title": "GuaBao Solve"
       }
+    ],
+    "keybindings": [
     ]
   },
   "scripts": {
