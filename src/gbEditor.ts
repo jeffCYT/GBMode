@@ -3,13 +3,14 @@ import * as vscode from 'vscode';
 /* CustomTextEditorProvider for GuaBao */
 
 export class GBEditorProvider implements vscode.CustomTextEditorProvider {
-    private static readonly viewType = 'gbCustoms.guabao';
+    private static readonly viewType = 'gbCustom.guabao';
 
     constructor(
 		private readonly context: vscode.ExtensionContext
 	) { }
 
     public static register(context: vscode.ExtensionContext): vscode.Disposable {
+        console.log("GBEditorProvide.register()");
         const provider = new GBEditorProvider(context);
         const providerRegistration = vscode.window.registerCustomEditorProvider(GBEditorProvider.viewType, provider);
         return providerRegistration;
@@ -21,14 +22,15 @@ export class GBEditorProvider implements vscode.CustomTextEditorProvider {
 		webviewPanel: vscode.WebviewPanel,
 		_token: vscode.CancellationToken
 	): Promise<void> {
+        console.log("GBEditorProvide.resolveCustomTextEditor()");
         // Setup initial content for the webview
         webviewPanel.webview.options = {
-            enableScripts: true,
+            enableScripts: true
         };
         function updateWebview() {
             webviewPanel.webview.postMessage({
                 type: 'update',
-                text: document.getText();
+                text: document.getText()
             });
         }
         // Hook up event handlers so that we can synchronize the webview with the text document.
@@ -48,9 +50,30 @@ export class GBEditorProvider implements vscode.CustomTextEditorProvider {
 		webviewPanel.onDidDispose(() => {
 			changeDocumentSubscription.dispose();
 		});
+        // Receive message from the webview.
+		webviewPanel.webview.onDidReceiveMessage(e => {
+			switch (e.type) {
+                default:
+                    console.log("webview message to onDidReceiveMesssage");
+			}
+		});
+        // const panel = vscode.window.createWebviewPanel("catCoding", "cat coding", vscode.ViewColumn.Two, { enableScripts: true });
+        updateWebview();
     }
 
     private getHtmlForWebview(webview: vscode.Webview): string {
+        // Local path to script and css for the webview
+        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'media', 'catScratch.js'));
+        const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'media', 'reset.css'));
+        const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'media', 'vscode.css'));
+        const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'media', 'catScratch.css'));
+
+        // Use a nonce to whitelist which scripts can be run
+        const nonce = getNonce();
         return /* html */`
         <!DOCTYPE html>
         <html lang="en">
@@ -82,4 +105,15 @@ export class GBEditorProvider implements vscode.CustomTextEditorProvider {
         </body>
         </html>`;
     }
+}
+
+
+// MISC functions
+function getNonce() {
+	let text = '';
+	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	for (let i = 0; i < 32; i++) {
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+	}
+	return text;
 }

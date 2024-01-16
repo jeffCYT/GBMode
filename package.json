@@ -18,15 +18,16 @@
     "customEditors": [
       {
         "viewType": "gbCustom.guabao",
-        "displayName": "GuaBao",
+        "displayName": "GuaBao View",
         "selector": [
           {
             "filenamePattern": "*.gcl"
           }
-        ]
+        ],
+        "priority": "default"
       }
     ],
-    "language": [
+    "languages": [
       {
         "id": "guabao",
         "extensions": [
