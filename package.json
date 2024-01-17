@@ -2,6 +2,7 @@
   "name": "guabaovlang",
   "displayName": "GuaBaoVLang",
   "description": "GuaBao Verification Language and Tools",
+  "publisher": "scmlab",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.85.0"

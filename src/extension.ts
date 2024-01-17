@@ -5,9 +5,8 @@ import { GBEditorProvider } from './gbEditor';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('GuaBao VLang Mode is now active!');
+
 	// Initiate CustomEditor
-	const panel = vscode.window.createWebviewPanel("gbCustom.guabao", "GB Webview",
-								vscode.ViewColumn.Two, { enableScripts: true });
 	context.subscriptions.push(GBEditorProvider.register(context));
 	// TODO Initiate LSP connection
 
@@ -16,11 +15,24 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Simple greetings from GuaBaoVLang!');
 	});
 	context.subscriptions.push(disposable);
+
+	//JEFF_NOTE manual porting for the time being
+	var editor = vscode.window.activeTextEditor;
+	// var filePath = editor!.document.fileName;
+	//var extensionPath = context.extensionPath;
+
+
 }
 
 export function deactivate() {
 	console.log('Deactivating GuaBao VLang Mode');
 	// TODO Send termination signal to backend LSP server
 	// "Connection.stop()"
+
+	/* [OLD] Connection.stop()
+	 * return Client__LSP$LanguageServerMule.destroy()
+	 */
+
 	console.log('Bye!');
 }
+
