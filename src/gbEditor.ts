@@ -34,8 +34,27 @@ export class GBEditorProvider implements vscode.CustomTextEditorProvider {
             enableScripts: true
         };
 
-        webviewPanel.webview.html = `<!DOCTYPE html><html lang="en"><head></head><body><h2> ${docFileName} Source Code</h2><p>${document.getText()}</p></body></html>`;;
+
         rPanel.webview.html = this.htmlDummy;
+        const styleUri = webviewPanel.webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'asset', 'style.css'));
+        webviewPanel.webview.html = `<!DOCTYPE html><html lang="en">
+        <style>
+        code {
+            display: block;
+            white-space: pre-wrap;
+            font-size: 20px;
+          }
+        </style>
+        <link href="${styleUri}" rel="stylesheet" />
+        <head>GCL Source Editor</head>
+        <body><h2> <i>${docFileName}</i> source code</h2>
+        <div class="gcl-panel">
+        <div class="element-inline-code">
+        <code>${document.getText()}</code>
+        </div>
+        </div>
+        </body></html>`;;
 
         function updateWebview() {
             webviewPanel.webview.postMessage({
@@ -77,8 +96,12 @@ export class GBEditorProvider implements vscode.CustomTextEditorProvider {
     private getHtmlForWebview(webview: vscode.Webview): string {
         // Local path to script and css for the webview
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(
-            this.context.extensionUri, 'media', 'catScratch.js'));
+            this.context.extensionUri, 'asset', 'catScratch.js'));
+        const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'asset', 'style.css'));
         // Use a nonce to whitelist which scripts can be run
+        console.log(`css loaded path: ${styleUri}`);
+
         const nonce = getNonce();
         return /* html */`
         <!DOCTYPE html>
@@ -91,6 +114,8 @@ export class GBEditorProvider implements vscode.CustomTextEditorProvider {
             -->
             <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+            <link href="${styleUri}" rel="stylesheet" />
             <title>GuaBao</title>
         </head>
         <body>
