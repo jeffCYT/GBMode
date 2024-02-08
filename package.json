@@ -10,24 +10,8 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onLanguage:guabao",
-    "onCommand:guabaovlang.greet"
-  ],
   "main": "./out/extension.js",
   "contributes": {
-    "customEditors": [
-      {
-        "viewType": "gbCustom.guabao",
-        "displayName": "GuaBao View",
-        "selector": [
-          {
-            "filenamePattern": "*.gcl"
-          }
-        ],
-        "priority": "default"
-      }
-    ],
     "languages": [
       {
         "id": "guabao",
