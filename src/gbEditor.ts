@@ -24,19 +24,37 @@ export class GBEditorProvider implements vscode.CustomTextEditorProvider {
 		_token: vscode.CancellationToken
 	): Promise<void> {
         console.log("GBEditorProvide.resolveCustomTextEditor()");
-
-        vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-
-        vscode.commands.executeCommand(
-            "vscode.openWith",
-            document.uri,
-            "default"
-        );
-
+        var docFileName = document.fileName.split("/").pop();
         const rPanel = vscode.window.createWebviewPanel("gbCustom.guabao", "GB Webview",
         vscode.ViewColumn.Two, { enableScripts: true });
 
+        // Setup initial content for the webview
+        //JEFF_NOTE: This webview is actually the one of the TextDocument
+        webviewPanel.webview.options = {
+            enableScripts: true
+        };
+
+
         rPanel.webview.html = this.htmlDummy;
+        const styleUri = webviewPanel.webview.asWebviewUri(vscode.Uri.joinPath(
+            this.context.extensionUri, 'asset', 'style.css'));
+        webviewPanel.webview.html = `<!DOCTYPE html><html lang="en">
+        <style>
+        code {
+            display: block;
+            white-space: pre-wrap;
+            font-size: 20px;
+          }
+        </style>
+        <link href="${styleUri}" rel="stylesheet" />
+        <head>GCL Source Editor</head>
+        <body><h2> <i>${docFileName}</i> source code</h2>
+        <div class="gcl-panel">
+        <div class="element-inline-code">
+        <code>${document.getText()}</code>
+        </div>
+        </div>
+        </body></html>`;;
 
         function updateWebview() {
             webviewPanel.webview.postMessage({
