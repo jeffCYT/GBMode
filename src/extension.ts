@@ -2,9 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { PanelProvider } from './gbEditor';
-import { start, stop } from "./connection";
-
-import * as path from 'path';
+import { start } from "./connection";
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('GuaBao VLang Mode is now active!');
@@ -28,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(refineDisposable);
 
 	// TODO Create a SERVER MODULE path and pass to connection.start() as arg
-	let server_module = context.asAbsolutePath("");
+	let server_module ="";
 	start(server_module);
 
 }
@@ -41,7 +39,7 @@ export function deactivate() {
 	/* [OLD] Connection.stop()
 	 * return Client__LSP$LanguageServerMule.destroy()
 	 */
-	stop()
+
 	console.log('Bye!');
 }
 

@@ -17,8 +17,8 @@ let client: LanguageClient;
 
 // var status = Disconnected | Connecting | Connected;
 
-export function stop() {
-    client.stop()
+function stop() {
+    // return destroy();
 }
 
 
@@ -39,9 +39,24 @@ function onError() {
 }
 
 export function start(serverModule:string) {
+    /** case status
+     * Connected => OK() from LSP
+     * Connecting => keep promise()
+     * Disconnected => LSPClient.make();
+     */
+    	// The server is implemented in node
+/* 	const serverModule = context.asAbsolutePath(
+		path.join('server', 'out', 'server.js')
+	);
+ */
+	// If the extension is launched in debug mode then the debug server options are used
+	// Otherwise the run options are used
 	const serverOptions: ServerOptions = {
-		run: { command: "gcl", transport: { kind: TransportKind.socket, port: 3000 } },
-		debug: { command: "gcl", transport: { kind: TransportKind.socket, port: 3000 } }
+		run: { module: serverModule, transport: TransportKind.ipc },
+		debug: {
+			module: serverModule,
+			transport: TransportKind.ipc,
+		}
 	};
 
 	// Options to control the language client
@@ -49,10 +64,10 @@ export function start(serverModule:string) {
 		// Register the server for plain text documents
 		documentSelector: [{ scheme: 'file', language: 'plaintext' }],
 		synchronize: {
-			// Notify the server about file changes to '.gcl' files contained in the workspace
-			fileEvents: vscode.workspace.createFileSystemWatcher('**/.gcl')
+			// Notify the server about file changes to '.clientrc files contained in the workspace
+			fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
 		}
 	};
     client = new LanguageClient ("GBM", "GuaBao LSP Server", serverOptions, clientOptions);
-	client.start();
+
 }
