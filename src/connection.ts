@@ -40,14 +40,14 @@ function onError() {
 
 export function start(serverModule:string) {
 	const serverOptions: ServerOptions = {
-		run: { command: "gcl", transport: { kind: TransportKind.socket, port: 3000 } },
-		debug: { command: "gcl", transport: { kind: TransportKind.socket, port: 3000 } }
+		run: { command: "gcl", transport: TransportKind.stdio },
+		debug: { command: "gcl", transport: TransportKind.stdio }
 	};
 
 	// Options to control the language client
 	const clientOptions: LanguageClientOptions = {
-		// Register the server for plain text documents
-		documentSelector: [{ scheme: 'file', language: 'plaintext' }],
+		// Register the server
+		documentSelector: [{ scheme: 'file', language: 'guabao' }],
 		synchronize: {
 			// Notify the server about file changes to '.gcl' files contained in the workspace
 			fileEvents: vscode.workspace.createFileSystemWatcher('**/.gcl')
