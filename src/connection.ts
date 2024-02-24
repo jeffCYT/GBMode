@@ -46,7 +46,7 @@ export function start(serverModule:string) {
 
 	// Options to control the language client
 	const clientOptions: LanguageClientOptions = {
-		// Register the server
+		// Register the server for plain text documents
 		documentSelector: [{ scheme: 'file', language: 'guabao' }],
 		synchronize: {
 			// Notify the server about file changes to '.gcl' files contained in the workspace
