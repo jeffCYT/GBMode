@@ -2,9 +2,9 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { PanelProvider } from './gbEditor';
-import { start, stop } from "./connection";
+import { start, stop, client } from "./connection";
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 	console.log('GuaBao VLang Mode is now active!');
 	const panelProvider = new PanelProvider();
 
@@ -23,11 +23,13 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage('Guabao not yet started!');
 		}
 	});
-	context.subscriptions.push(refineDisposable);
 
 	// TODO Create a SERVER MODULE path and pass to connection.start() as arg
 	let server_module = context.asAbsolutePath("");
 	start(server_module);
+
+	let path = (vscode.workspace.workspaceFolders || [])[0].uri.path;
+	let response = await client.sendRequest("guabao", [path, { "tag": "ReqReload" }]);
 
 }
 

@@ -12,7 +12,7 @@ import { LanguageClient,
 	TransportKind } from "vscode-languageclient/node";
 import { activate } from "./extension";
 
-let client: LanguageClient;
+export let client: LanguageClient;
 
 
 // var status = Disconnected | Connecting | Connected;
