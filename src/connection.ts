@@ -12,7 +12,8 @@ import { LanguageClient,
 	TransportKind } from "vscode-languageclient/node";
 import { activate } from "./extension";
 
-let client: LanguageClient;
+export let client: LanguageClient;
+
 
 // var status = Disconnected | Connecting | Connected;
 
@@ -21,8 +22,12 @@ export function stop() {
 }
 
 
-export async function sendRequest(method: string, param: any) {
-	client.sendRequest(method, param)
+function sendRequest() {
+	/** case status
+	 * Disconnected => start(); sendRequest()
+	 * Connecting => push(request) into queue?
+	 * Connected => LSPClient.onReady(); LSPClient.sendRequest(request)
+	 */
 }
 
 function onNotification() {

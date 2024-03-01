@@ -65,10 +65,6 @@
       {
         "command": "guabaovlang.reload",
         "title": "GuaBao Reload"
-      },
-      {
-        "command": "guabaovlang.helloworld",
-        "title": "GuaBao Hello World"
       }
     ],
     "keybindings": []
