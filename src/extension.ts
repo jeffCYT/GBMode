@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { PanelProvider } from './gbEditor';
 import { start, stop, client } from "./connection";
 
@@ -23,14 +24,17 @@ export async function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage('Guabao not yet started!');
 		}
 	});
+	context.subscriptions.push(refineDisposable);
 
 	// TODO Create a SERVER MODULE path and pass to connection.start() as arg
 	let server_module = context.asAbsolutePath("");
 	start(server_module);
 
-	let path = (vscode.workspace.workspaceFolders || [])[0].uri.path;
-	let response = await client.sendRequest("guabao", [path, { "tag": "ReqReload" }]);
-
+	const reloadDisposable = vscode.commands.registerCommand('guabaovlang.reload', async () => {
+		const path = vscode.window.activeTextEditor?.document.uri.fsPath
+		let response = await client.sendRequest("guabao", [path, { "tag": "ReqReload" }]);
+	});
+	context.subscriptions.push(reloadDisposable);
 }
 
 export function deactivate() {

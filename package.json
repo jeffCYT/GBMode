@@ -61,6 +61,10 @@
       {
         "command": "guabaovlang.solve",
         "title": "GuaBao Solve"
+      },
+      {
+        "command": "guabaovlang.reload",
+        "title": "GuaBao Reload"
       }
     ],
     "keybindings": []
