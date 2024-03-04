@@ -23,9 +23,78 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(reloadDisposable);
 
+	const inspectDisposable = vscode.commands.registerCommand('guabaovlang.inspect', async () => {
+
+		const editor = vscode.window.activeTextEditor
+		const path = editor?.document.uri.fsPath;
+		const selection = editor?.selection;
+		const startLine = (selection?.start.line ?? 0) + 1;
+		const startChar = (selection?.start.character ?? 0) + 1;
+		const startOff = editor?.document.offsetAt(selection?.start || new vscode.Position(0, 0));
+		const endLine = (selection?.end.line ?? 0) + 1;
+		const endChar = (selection?.end.character ?? 0) + 1;
+		const endOff = editor?.document.offsetAt(selection?.end || new vscode.Position(0, 0));
+
+		await sendRequest("guabao", [
+			path, { "tag": "ReqInspect",
+				"contents": [
+					[path, startLine, startChar, startOff],
+					[path, endLine, endChar, endOff]
+				]
+			}
+		]);
+		
+	});
+	context.subscriptions.push(inspectDisposable);
+
+	const refineDisposable = vscode.commands.registerCommand('guabaovlang.refine', async () => {
+
+		const editor = vscode.window.activeTextEditor
+		const path = editor?.document.uri.fsPath;
+		const selection = editor?.selection;
+		const startLine = (selection?.start.line ?? 0) + 1;
+		const startChar = (selection?.start.character ?? 0) + 1;
+		const startOff = editor?.document.offsetAt(selection?.start || new vscode.Position(0, 0));
+		const endLine = (selection?.end.line ?? 0) + 1;
+		const endChar = (selection?.end.character ?? 0) + 1;
+		const endOff = editor?.document.offsetAt(selection?.end || new vscode.Position(0, 0));
+
+		const response = await sendRequest("guabao", [
+			path, { "tag": "ReqRefine2",
+				"contents": [
+					[
+						[path, startLine, startChar, startOff],
+						[path, endLine, endChar, endOff],
+					],
+					"GARBAGE"
+				]
+			}
+		]);
+		
+	});
+	context.subscriptions.push(refineDisposable);
+
 	const helloWorldDisposable = vscode.commands.registerCommand('guabaovlang.helloworld', async () => {
-		const path = vscode.window.activeTextEditor?.document.uri.fsPath;
-		let response = await sendRequest("guabao", [path, { "tag": "ReqHelloWorld", "contents": [[path, 0, 0, 0], [path, 0, 0, 0]] }]); // TODO: pass correct location tp backend
+
+		const editor = vscode.window.activeTextEditor
+		const path = editor?.document.uri.fsPath;
+		const selection = editor?.selection;
+		const startLine = (selection?.start.line ?? 0) + 1;
+		const startChar = (selection?.start.character ?? 0) + 1;
+		const startOff = editor?.document.offsetAt(selection?.start || new vscode.Position(0, 0));
+		const endLine = (selection?.end.line ?? 0) + 1;
+		const endChar = (selection?.end.character ?? 0) + 1;
+		const endOff = editor?.document.offsetAt(selection?.end || new vscode.Position(0, 0));
+
+		await sendRequest("guabao", [
+			path, { "tag": "ReqHelloWorld",
+				"contents": [
+					[path, startLine, startChar, startOff],
+					[path, endLine, endChar, endOff]
+				]
+			}
+		]);
+
 	});
 	context.subscriptions.push(helloWorldDisposable);
 

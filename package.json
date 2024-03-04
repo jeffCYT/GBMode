@@ -69,6 +69,10 @@
       {
         "command": "guabaovlang.helloworld",
         "title": "GuaBao Hello World"
+      },
+      {
+        "command": "guabaovlang.inspect",
+        "title": "GuaBao Inspect"
       }
     ],
     "keybindings": []
