@@ -21,8 +21,8 @@ export function stop() {
 	client.stop()
 }
 
-export async function sendRequest(method: string, param: any) {
-	client.sendRequest(method, param);
+export async function sendRequest<R>(method: string, param: any): Promise<R> {
+	return client.sendRequest(method, param);
 }
 
 function onNotification() {
@@ -48,6 +48,7 @@ export function start(serverModule:string) {
 			fileEvents: vscode.workspace.createFileSystemWatcher('**/.gcl')
 		}
 	};
+
 	client = new LanguageClient ("GBM", "GuaBao LSP Server", serverOptions, clientOptions);
 	client.start();
 }

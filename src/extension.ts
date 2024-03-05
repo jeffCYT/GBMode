@@ -20,6 +20,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	const reloadDisposable = vscode.commands.registerCommand('guabaovlang.reload', async () => {
 		const path = vscode.window.activeTextEditor?.document.uri.fsPath;
 		let response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
+		panelProvider.format(JSON.stringify(response));
 	});
 	context.subscriptions.push(reloadDisposable);
 
@@ -70,6 +71,8 @@ export async function activate(context: vscode.ExtensionContext) {
 				]
 			}
 		]);
+
+		panelProvider.format(JSON.stringify(response));
 		
 	});
 	context.subscriptions.push(refineDisposable);
