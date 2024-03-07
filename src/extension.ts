@@ -4,27 +4,11 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { PanelProvider } from './gbEditor';
 import { start, stop, sendRequest } from "./connection";
+import { getSpecs } from './spec'
 
 let response: unknown;
 
 let editor: vscode.TextEditor | undefined;
-
-class Spec {
-	constructor(public pre: string, public post: string, public range: vscode.Range) { }
-}
-
-function getSpecs(response: any): Spec[] {
-	let specs = response.contents[1].filter((m: any) => m.tag === "ResUpdateSpecs")[0].contents
-	let processed = specs.map((spec: any) => {
-		const pre = spec[1];
-		const post = spec[2];
-		const originalRange = spec[3];
-		const range = new vscode.Range(new vscode.Position(originalRange[0][1] - 1, originalRange[0][2] - 1),
-									   new vscode.Position(originalRange[1][1] - 1, 0));
-		return new Spec(pre, post, range);
-	})
-	return processed;
-}
 
 export async function activate(context: vscode.ExtensionContext) {
 	console.log('GuaBao VLang Mode is now active!');
