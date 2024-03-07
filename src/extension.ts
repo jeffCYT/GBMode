@@ -5,11 +5,33 @@ import * as path from 'path';
 import { PanelProvider } from './gbEditor';
 import { start, stop, sendRequest } from "./connection";
 
+let response: unknown;
+
+let editor: vscode.TextEditor | undefined;
+
+class Spec {
+	constructor(public pre: string, public post: string, public range: vscode.Range) { }
+}
+
+function getSpecs(response: any): Spec[] {
+	let specs = response.contents[1].filter((m: any) => m.tag === "ResUpdateSpecs")[0].contents
+	let processed = specs.map((spec: any) => {
+		const pre = spec[1];
+		const post = spec[2];
+		const originalRange = spec[3];
+		const range = new vscode.Range(new vscode.Position(originalRange[0][1] - 1, originalRange[0][2] - 1),
+									   new vscode.Position(originalRange[1][1] - 1, 0));
+		return new Spec(pre, post, range);
+	})
+	return processed;
+}
+
 export async function activate(context: vscode.ExtensionContext) {
 	console.log('GuaBao VLang Mode is now active!');
 	const panelProvider = new PanelProvider();
 
 	const startDisposable = vscode.commands.registerCommand('guabaovlang.start', () => {
+		editor = vscode.window.activeTextEditor;
 		if(vscode.window.tabGroups.all.flatMap(group => group.tabs).filter(tab => tab.label === "GB Webview").length === 0) {
 			panelProvider.createPanel();
 			panelProvider.format(vscode.window.activeTextEditor?.document.getText() || "");
@@ -18,11 +40,27 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(startDisposable);
 
 	const reloadDisposable = vscode.commands.registerCommand('guabaovlang.reload', async () => {
+		editor = vscode.window.activeTextEditor;
 		const path = vscode.window.activeTextEditor?.document.uri.fsPath;
-		let response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
+		response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
 		panelProvider.format(JSON.stringify(response));
 	});
 	context.subscriptions.push(reloadDisposable);
+
+	vscode.languages.registerInlayHintsProvider(
+		{ scheme: 'file', language: 'guabao' },
+		{
+			provideInlayHints(document, range, token): vscode.InlayHint[] {
+				if (editor === vscode.window.activeTextEditor) {
+					const specs = getSpecs(response);
+					let inlayHints = specs.flatMap(s => [new vscode.InlayHint(s.range.start, s.pre), new vscode.InlayHint(s.range.end, s.post)])
+					return inlayHints;
+				} else {
+					return [];
+				}
+			}
+		}
+	)
 
 	const inspectDisposable = vscode.commands.registerCommand('guabaovlang.inspect', async () => {
 
