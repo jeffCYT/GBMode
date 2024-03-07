@@ -5,6 +5,7 @@ import * as path from 'path';
 import { PanelProvider } from './gbEditor';
 import { start, stop, sendRequest } from "./connection";
 import { getSpecs } from './spec'
+import { getSection } from './section'
 
 let response: unknown;
 
