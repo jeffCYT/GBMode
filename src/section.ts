@@ -22,23 +22,41 @@ class Code {
 
 type Inline = Icon | Text | Snpt | Link | Sbst | Horz | Vert | Parn | PrHz
 
-class Icon {}
+class Icon {
+    constructor(public name: string, public classNames: string[]) {}
+}
 
-class Text {}
+class Text {
+    constructor(public text: string, public classNames: string[]) {}
+}
 
-class Snpt {}
+class Snpt {
+    constructor(public inlines: Inline[]) {}
+}
 
-class Link {}
+class Link {
+    constructor(public range: vscode.Range, public inlines: Inline[], classNames: string[]) {}
+}
 
-class Sbst  {}
+class Sbst {
+    constructor(public iDontKnowWhatThisIs: number, public inlines: Inline[]) {}
+}
 
-class Horz {}
+class Horz {
+    constructor(public columnns: Inline[][]) {}
+}
 
-class Vert {}
+class Vert {
+    constructor(public rows: Inline[][]) {}
+}
 
-class Parn {}
+class Parn {
+    constructor(public inlines: Inline[]) {}
+}
 
-class PrHz {}
+class PrHz {
+    constructor(public columns: Inline[][]) {}
+}
 
 
 export function getSection(response: any): Section[] {
