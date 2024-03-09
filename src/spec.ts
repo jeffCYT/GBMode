@@ -5,7 +5,7 @@ class Spec {
 }
 
 export function getSpecs(response: any): Spec[] {
-	let specs = response.contents[1].filter((m: any) => m.tag === "ResUpdateSpecs")[0].contents
+	let specs = response.contents[1].filter((m: any) => m.tag === "ResUpdateSpecs")[0].contents;
 	let processed = specs.map((spec: any) => {
 		const pre = spec[1];
 		const post = spec[2];

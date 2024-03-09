@@ -5,7 +5,7 @@ import * as path from 'path';
 import { PanelProvider } from './gbEditor';
 import { start, stop, sendRequest } from "./connection";
 import { getSpecs } from './spec'
-import { getSection } from './section'
+import { getSections } from './section'
 
 let response: unknown;
 
@@ -28,7 +28,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		editor = vscode.window.activeTextEditor;
 		const path = vscode.window.activeTextEditor?.document.uri.fsPath;
 		response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
-		panelProvider.format(JSON.stringify(response));
+		const parsedResponse = getSections(response);
+		panelProvider.format(parsedResponse);
 	});
 	context.subscriptions.push(reloadDisposable);
 
