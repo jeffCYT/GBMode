@@ -1,4 +1,4 @@
-import { Section, Block, Header, HeaderWithButtons, Paragraph, Code } from './section'
+import { Section, Block, Header, HeaderWithButtons, Paragraph, Code, Inline, Icon, Text, Snpt, Link, Horz, Vert } from './section'
 import * as vscode from 'vscode';
 
 export class PanelProvider {
@@ -24,16 +24,61 @@ function renderSections(content: Section[]): string {
 function renderBlocks(blocks: Block[]): string {
 	return blocks.map(block => {
 		if (block instanceof Header) {
-			return `<div>${block.text} ${block.range}</div>`
+			return renderHeader(block);
 		}
 		if (block instanceof HeaderWithButtons) {
-			return `<div>${block.headerText} ${block.headerLoc} ${block.anchorText} ${block.anchorLoc}</div>`
+			return renderHeaderWithButtons(block);
 		}
 		if (block instanceof Paragraph) {
-			return `<div>${block.inlines}</div>`
+			return `<div>${renderInlines(block.inlines)}</div>`
 		}
 		if (block instanceof Code) {
-			return `<div>${block.inlines}</div>`
+			return `<div>${renderInlines(block.inlines)}</div>`
 		}
-	}).join()
+	}).join("\n")
+}
+
+function renderInlines(inlines: Inline[]): string {
+	return inlines.map(inline => {
+		if(inline instanceof Icon) {
+			return "ICON";
+		}
+		if(inline instanceof Text) {
+			return inline.text;
+		}
+		if(inline instanceof Snpt) {
+			return renderInlines(inline.inlines);
+		}
+		if(inline instanceof Link) {
+			return `${renderRange(inline.range)}: <code>${renderInlines(inline.inlines)}</code> \n ${inline.classNames}`;
+		}
+		if(inline instanceof Horz) {
+			const columns = inline.columnns.map(col => renderInlines(col)).join("\n")
+			return `Horz: ${columns}`;
+		}
+		if(inline instanceof Vert) {
+			const rows = inline.rows.map(row => renderInlines(row)).join("\n")
+			return `Vert: ${rows}`;
+		}
+	}).join("\n")
+}
+
+function renderHeader(header: Header): string {
+	return `<div>${header.text} ${renderRange(header.range)}</div>`
+}
+
+function renderRange(range: vscode.Range | undefined): string {
+	return `${adjustLineOrChar(range?.start.line)}:${adjustLineOrChar(range?.start.character)}-${adjustLineOrChar(range?.end.line)}:${adjustLineOrChar(range?.end.character)}`
+}
+
+function adjustLineOrChar(num: number | undefined): number | undefined {
+	if(num === undefined) {
+		return undefined;
+	} else {
+		return num + 1;
+	}
+}
+
+function renderHeaderWithButtons(header: HeaderWithButtons): string {
+	return `<div>${header.headerText} ${renderRange(header.headerLoc)} ${header.anchorText} ${renderRange(header.anchorLoc)}</div>`
 }
