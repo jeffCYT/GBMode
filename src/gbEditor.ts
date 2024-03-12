@@ -31,15 +31,15 @@ function renderSections(sections: Section[], extPath: string): string {
 	const content = sections.map(section => {
 		switch(section.deco) {
 			case 'Plain':
-				return `<div class="border rounded">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="border rounded p-3">${renderBlocks(section.blocks)}</div>`;
 			case 'Red':
-				return `<div class="text-danger border rounded">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="text-danger border rounded p-3">${renderBlocks(section.blocks)}</div>`;
 			case 'Yellow':
-				return `<div class="text-warning border rounded">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="text-warning border rounded p-3">${renderBlocks(section.blocks)}</div>`;
 			case 'Blue':
-				return `<div class="text-primary border rounded">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="text-primary border rounded p-3">${renderBlocks(section.blocks)}</div>`;
 			case 'Green':
-				return `<div class="text-success border rounded">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="text-success border rounded p-3">${renderBlocks(section.blocks)}</div>`;
 		}
 	}).join('<br>')
 
