@@ -40,11 +40,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(startDisposable);
 
 	const reloadDisposable = vscode.commands.registerCommand('guabaovlang.reload', async () => {
-		editor = vscode.window.activeTextEditor;
-		const path = vscode.window.activeTextEditor?.document.uri.fsPath;
-		response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
-		const parsedResponse = getSections(response);
-		if(panelProvider.initiated()) {
+		if(panelProvider.initiated()) {	
+			editor = vscode.window.activeTextEditor;
+			const path = vscode.window.activeTextEditor?.document.uri.fsPath;
+			response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
+			const parsedResponse = getSections(response);
 			panelProvider.format(parsedResponse, context.extensionPath);
 		} else {
 			vscode.window.showInformationMessage("Please run 'Guabao start' first!");
@@ -78,31 +78,32 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const refineDisposable = vscode.commands.registerCommand('guabaovlang.refine', async () => {
 
-		const editor = vscode.window.activeTextEditor
-		const path = editor?.document.uri.fsPath;
-		const selection = editor?.selection;
-		const startLine = (selection?.start.line ?? 0) + 1;
-		const startChar = (selection?.start.character ?? 0) + 1;
-		const startOff = editor?.document.offsetAt(selection?.start || new vscode.Position(0, 0));
-		const endLine = (selection?.end.line ?? 0) + 1;
-		const endChar = (selection?.end.character ?? 0) + 1;
-		const endOff = editor?.document.offsetAt(selection?.end || new vscode.Position(0, 0));
-
-		const response = await sendRequest("guabao", [
-			path, { "tag": "ReqRefine2",
-				"contents": [
-					[
-						[path, startLine, startChar, startOff],
-						[path, endLine, endChar, endOff],
-					],
-					"GARBAGE"
-				]
-			}
-		]);
-
-		const parsedResponse = getSections(response);
 		if(panelProvider.initiated()) {
+			const editor = vscode.window.activeTextEditor
+			const path = editor?.document.uri.fsPath;
+			const selection = editor?.selection;
+			const startLine = (selection?.start.line ?? 0) + 1;
+			const startChar = (selection?.start.character ?? 0) + 1;
+			const startOff = editor?.document.offsetAt(selection?.start || new vscode.Position(0, 0));
+			const endLine = (selection?.end.line ?? 0) + 1;
+			const endChar = (selection?.end.character ?? 0) + 1;
+			const endOff = editor?.document.offsetAt(selection?.end || new vscode.Position(0, 0));
+
+			const response = await sendRequest("guabao", [
+				path, { "tag": "ReqRefine2",
+					"contents": [
+						[
+							[path, startLine, startChar, startOff],
+							[path, endLine, endChar, endOff],
+						],
+						"GARBAGE"
+					]
+				}
+			]);
+
+			const parsedResponse = getSections(response);
 			panelProvider.format(parsedResponse, context.extensionPath);
+
 		} else {
 			vscode.window.showInformationMessage("Please run 'Guabao start' first!");
 		}
