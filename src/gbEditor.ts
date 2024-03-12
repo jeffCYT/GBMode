@@ -31,17 +31,17 @@ function renderSections(sections: Section[], extPath: string): string {
 	const content = sections.map(section => {
 		switch(section.deco) {
 			case 'Plain':
-				return `${renderBlocks(section.blocks)}`;
+				return `<div class="border rounded">${renderBlocks(section.blocks)}</div>`;
 			case 'Red':
-				return `<div class="text-danger">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="text-danger border rounded">${renderBlocks(section.blocks)}</div>`;
 			case 'Yellow':
-				return `<div class="text-warning">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="text-warning border rounded">${renderBlocks(section.blocks)}</div>`;
 			case 'Blue':
-				return `<div class="text-primary">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="text-primary border rounded">${renderBlocks(section.blocks)}</div>`;
 			case 'Green':
-				return `<div class="text-success">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="text-success border rounded">${renderBlocks(section.blocks)}</div>`;
 		}
-	}).join(' ')
+	}).join('<br>')
 
 	return `
 		<!DOCTYPE html>
@@ -112,7 +112,7 @@ function renderInlines(inlines: Inline[]): string {
 		}
 		if(inline instanceof Vert) {
 			const rows = inline.rows.map(row => renderInlines(row)).join("<br>")
-			return `${rows}`;
+			return `<div class="text-center">${rows}</div>`;
 		}
 		if(inline instanceof Parn) {
 			return `(${renderInlines(inline.inlines)})`;
