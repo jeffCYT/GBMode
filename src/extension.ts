@@ -15,24 +15,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	console.log('GuaBao VLang Mode is now active!');
 	const panelProvider = new PanelProvider();
 
-	const startDisposable = vscode.commands.registerCommand('guabaovlang.start', () => {
-		editor = vscode.window.activeTextEditor;
-		if(vscode.window.tabGroups.all.flatMap(group => group.tabs).filter(tab => tab.label === "GB Webview").length === 0) {
-			panelProvider.createPanel();
-			panelProvider.format(vscode.window.activeTextEditor?.document.getText() || "", context.extensionPath);
-		}
-	});
-	context.subscriptions.push(startDisposable);
-
-	const reloadDisposable = vscode.commands.registerCommand('guabaovlang.reload', async () => {
-		editor = vscode.window.activeTextEditor;
-		const path = vscode.window.activeTextEditor?.document.uri.fsPath;
-		response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
-		const parsedResponse = getSections(response);
-		panelProvider.format(parsedResponse, context.extensionPath);
-	});
-	context.subscriptions.push(reloadDisposable);
-
 	vscode.languages.registerInlayHintsProvider(
 		{ scheme: 'file', language: 'guabao' },
 		{
@@ -47,6 +29,28 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		}
 	)
+
+	const startDisposable = vscode.commands.registerCommand('guabaovlang.start', () => {
+		editor = vscode.window.activeTextEditor;
+		if(vscode.window.tabGroups.all.flatMap(group => group.tabs).filter(tab => tab.label === "GB Webview").length === 0) {
+			panelProvider.createPanel();
+			panelProvider.format(vscode.window.activeTextEditor?.document.getText() || "", context.extensionPath);
+		}
+	});
+	context.subscriptions.push(startDisposable);
+
+	const reloadDisposable = vscode.commands.registerCommand('guabaovlang.reload', async () => {
+		editor = vscode.window.activeTextEditor;
+		const path = vscode.window.activeTextEditor?.document.uri.fsPath;
+		response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
+		const parsedResponse = getSections(response);
+		if(panelProvider.initiated()) {
+			panelProvider.format(parsedResponse, context.extensionPath);
+		} else {
+			vscode.window.showInformationMessage("Please run 'Guabao start' first!");
+		}
+	});
+	context.subscriptions.push(reloadDisposable);
 
 	const inspectDisposable = vscode.commands.registerCommand('guabaovlang.inspect', async () => {
 
@@ -96,7 +100,12 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		]);
 
-		panelProvider.format(JSON.stringify(response), context.extensionPath);
+		const parsedResponse = getSections(response);
+		if(panelProvider.initiated()) {
+			panelProvider.format(parsedResponse, context.extensionPath);
+		} else {
+			vscode.window.showInformationMessage("Please run 'Guabao start' first!");
+		}
 		
 	});
 	context.subscriptions.push(refineDisposable);

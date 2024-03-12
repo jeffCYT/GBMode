@@ -4,7 +4,11 @@ import * as path from 'path';
 
 export class PanelProvider {
 	static panel: vscode.WebviewPanel;
+	initiated(): boolean {
+		return !(PanelProvider.panel === undefined)
+	}
 	createPanel(): void {
+		console.log(PanelProvider.panel);
 		PanelProvider.panel = vscode.window.createWebviewPanel("gbCustom.guabao", "GB Webview",
 		                                                       vscode.ViewColumn.Two, { enableScripts: true });
 	}
