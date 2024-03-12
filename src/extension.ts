@@ -35,6 +35,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		if(vscode.window.tabGroups.all.flatMap(group => group.tabs).filter(tab => tab.label === "GB Webview").length === 0) {
 			panelProvider.createPanel();
 			panelProvider.format(vscode.window.activeTextEditor?.document.getText() || "", context.extensionPath);
+			vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
 		}
 	});
 	context.subscriptions.push(startDisposable);
@@ -46,6 +47,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
 			const parsedResponse = getSections(response);
 			panelProvider.format(parsedResponse, context.extensionPath);
+			vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
 		} else {
 			vscode.window.showInformationMessage("Please run 'Guabao start' first!");
 		}

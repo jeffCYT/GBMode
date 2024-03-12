@@ -28,7 +28,21 @@ function renderSections(sections: Section[], extPath: string): string {
     const scriptPathOnDisk = vscode.Uri.file(path.join(extPath, '/asset/popper.min.js'));
 	const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
 
-	const content = sections.map(section => `${section.deco}: ${renderBlocks(section.blocks)}`).join(' ');
+	const content = sections.map(section => {
+		switch(section.deco) {
+			case 'Plain':
+				return `${renderBlocks(section.blocks)}`;
+			case 'Red':
+				return `<div class="text-danger">${renderBlocks(section.blocks)}</div>`;
+			case 'Yellow':
+				return `<div class="text-warning">${renderBlocks(section.blocks)}</div>`;
+			case 'Blue':
+				return `<div class="text-primary">${renderBlocks(section.blocks)}</div>`;
+			case 'Green':
+				return `<div class="text-success">${renderBlocks(section.blocks)}</div>`;
+		}
+	}).join(' ')
+
 	return `
 		<!DOCTYPE html>
 		<html lang="en" data-bs-theme="dark">
