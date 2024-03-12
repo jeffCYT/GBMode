@@ -91,6 +91,9 @@ function getInlines(response: any): Inline[] {
         let result: Inline[] = [];
         for(let content of (response as any[])) {
             switch(content.tag) {
+                case 'Icon':
+                    result.push(new Icon(content.contents[0], content.contents[1]));
+                    break;
                 case 'Text':
                     result.push(new Text(content.contents[0], content.contents[1]));
                     break;
@@ -101,10 +104,13 @@ function getInlines(response: any): Inline[] {
                     result.push(new Link(getRange(content.contents[0]), getInlines(content.contents[1]), content.contents[2]));
                     break;
                 case 'Horz':
-                    result.push(new Horz(content.contents.map((inline: any) => getInlines(inline.contents))));
+                    result.push(new Horz(content.contents.map((inlines: any) => getInlines(inlines))));
                     break;
                 case 'Vert':
-                    result.push(new Vert(content.contents.map((inline: any) => getInlines(inline.contents))));
+                    result.push(new Vert(content.contents.map((inlines: any) => getInlines(inlines))));
+                    break;
+                case 'Parn':
+                    result.push(new Parn(getInlines(content.contents)));
                     break;
             }
         };

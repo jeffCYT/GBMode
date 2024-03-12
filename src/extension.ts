@@ -19,7 +19,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		editor = vscode.window.activeTextEditor;
 		if(vscode.window.tabGroups.all.flatMap(group => group.tabs).filter(tab => tab.label === "GB Webview").length === 0) {
 			panelProvider.createPanel();
-			panelProvider.format(vscode.window.activeTextEditor?.document.getText() || "");
+			panelProvider.format(vscode.window.activeTextEditor?.document.getText() || "", context.extensionPath);
 		}
 	});
 	context.subscriptions.push(startDisposable);
@@ -29,7 +29,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		const path = vscode.window.activeTextEditor?.document.uri.fsPath;
 		response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
 		const parsedResponse = getSections(response);
-		panelProvider.format(parsedResponse);
+		panelProvider.format(parsedResponse, context.extensionPath);
 	});
 	context.subscriptions.push(reloadDisposable);
 
@@ -96,7 +96,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		]);
 
-		panelProvider.format(JSON.stringify(response));
+		panelProvider.format(JSON.stringify(response), context.extensionPath);
 		
 	});
 	context.subscriptions.push(refineDisposable);
