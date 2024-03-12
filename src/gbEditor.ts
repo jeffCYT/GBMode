@@ -1,4 +1,4 @@
-import { Section, Block, Header, HeaderWithButtons, Paragraph, Code, Inline, Icon, Text, Snpt, Link, Horz, Vert, Parn } from './section'
+import { Section, Block, Header, HeaderWithButtons, Paragraph, Code, Inline, Icon, Text, Snpt, Link, Sbst, Horz, Vert, Parn } from './section'
 import * as vscode from 'vscode';
 import * as path from 'path';
 
@@ -83,7 +83,10 @@ function renderInlines(inlines: Inline[]): string {
 			return ` <code>${renderInlines(inline.inlines)}</code> `;
 		}
 		if(inline instanceof Link) {
-			return `<span data-bs-toggle="tooltip" title="${renderRange(inline.range)}">${renderInlines(inline.inlines)}</span>`; // omit `inline.range` and `inline.classNames`
+			return `<span data-bs-toggle="tooltip" title="${renderRange(inline.range)}">${renderInlines(inline.inlines)}</span>`; // omit `inline.classNames`
+		}
+		if(inline instanceof Sbst) {
+			return `${renderInlines(inline.inlines)}` // omit `inline.iDontKnowWhatThisIs`
 		}
 		if(inline instanceof Horz) {
 			const columns = inline.columnns.map(col => renderInlines(col)).join("")

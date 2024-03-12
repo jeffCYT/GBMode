@@ -103,6 +103,9 @@ function getInlines(response: any): Inline[] {
                 case 'Link':
                     result.push(new Link(getRange(content.contents[0]), getInlines(content.contents[1]), content.contents[2]));
                     break;
+                case 'Sbst':
+                    result.push(new Sbst(content.contents[0], getInlines(content.contents[1])));
+                    break;
                 case 'Horz':
                     result.push(new Horz(content.contents.map((inlines: any) => getInlines(inlines))));
                     break;
