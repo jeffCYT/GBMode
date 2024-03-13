@@ -112,7 +112,7 @@ function renderInlines(inlines: Inline[]): string {
 		}
 		if(inline instanceof Vert) {
 			const rows = inline.rows.map(row => renderInlines(row)).join("<br>")
-			return `<div class="text-center">${rows}</div>`;
+			return `<br><div class="text-center">${rows}</div><br>`;
 		}
 		if(inline instanceof Parn) {
 			return `(${renderInlines(inline.inlines)})`;
