@@ -21,22 +21,22 @@ export class PanelProvider {
 		}
 	}
 	receiveMessage(context: vscode.ExtensionContext) {
+		const decorationType = vscode.window.createTextEditorDecorationType({
+			borderWidth: '1px',
+			borderStyle: 'solid',
+			overviewRulerColor: 'blue',
+			overviewRulerLane: vscode.OverviewRulerLane.Right,
+			light: {
+				// this color will be used in light color themes
+				borderColor: 'darkblue'
+			},
+			dark: {
+				// this color will be used in dark color themes
+				borderColor: 'lightblue'
+			}
+		});
 		PanelProvider.panel.webview.onDidReceiveMessage(
 			message => {
-				const decorationType = vscode.window.createTextEditorDecorationType({
-					borderWidth: '1px',
-					borderStyle: 'solid',
-					overviewRulerColor: 'blue',
-					overviewRulerLane: vscode.OverviewRulerLane.Right,
-					light: {
-						// this color will be used in light color themes
-						borderColor: 'darkblue'
-					},
-					dark: {
-						// this color will be used in dark color themes
-						borderColor: 'lightblue'
-					}
-				});
 				switch (message.command) {
 					case 'decorate':
 						vscode.window.visibleTextEditors[0].setDecorations(decorationType, [new vscode.Range(new vscode.Position(message.startLine, message.startChar), new vscode.Position(message.endLine, message.endChar))]);
