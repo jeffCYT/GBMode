@@ -8,7 +8,6 @@ export class PanelProvider {
 		return PanelProvider.panel !== undefined
 	}
 	createPanel(): void {
-		console.log(PanelProvider.panel);
 		PanelProvider.panel = vscode.window.createWebviewPanel("gbCustom.guabao", "GB Webview",
 		                                                       vscode.ViewColumn.Two, { enableScripts: true });
 	}
@@ -21,6 +20,36 @@ export class PanelProvider {
 			PanelProvider.panel.webview.html = renderSections(content, extPath);
 		}
 	}
+	receiveMessage(context: vscode.ExtensionContext) {
+		PanelProvider.panel.webview.onDidReceiveMessage(
+			message => {
+				const decorationType = vscode.window.createTextEditorDecorationType({
+					borderWidth: '1px',
+					borderStyle: 'solid',
+					overviewRulerColor: 'blue',
+					overviewRulerLane: vscode.OverviewRulerLane.Right,
+					light: {
+						// this color will be used in light color themes
+						borderColor: 'darkblue'
+					},
+					dark: {
+						// this color will be used in dark color themes
+						borderColor: 'lightblue'
+					}
+				});
+				switch (message.command) {
+					case 'decorate':
+						vscode.window.visibleTextEditors[0].setDecorations(decorationType, [new vscode.Range(new vscode.Position(message.startLine, message.startChar), new vscode.Position(message.endLine, message.endChar))]);
+						return;
+					case 'undecorate':
+						vscode.window.visibleTextEditors[0].setDecorations(decorationType, []);
+						return;
+				}
+			},
+			undefined,
+			context.subscriptions
+		  );
+	}
 }
 
 // The below renderXXXXX functions turn the parsed data structure into HTML.
@@ -29,8 +58,6 @@ function renderSections(sections: Section[], extPath: string): string {
 	const webview = PanelProvider.panel.webview;
 	const stylePathOnDisk = vscode.Uri.file(path.join(extPath, '/asset/bootstrap.min.css'));
 	const styleUri = webview.asWebviewUri(stylePathOnDisk);
-    const scriptPathOnDisk = vscode.Uri.file(path.join(extPath, '/asset/popper.min.js'));
-	const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
 
 	const content = sections.map(section => {
 		switch(section.deco) {
@@ -58,10 +85,22 @@ function renderSections(sections: Section[], extPath: string): string {
 			</head>
 			<body>
 				${content}
-				<script src=${scriptUri}></script>
 				<script>
-					const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-					const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+					const vscode = acquireVsCodeApi();
+					function decorateCode(startLine, startChar, endLine, endChar) {
+						vscode.postMessage({
+							command: 'decorate',
+							startLine: startLine,
+							startChar: startChar,
+							endLine: endLine,
+							endChar: endChar
+						});
+					}
+					function undecorateCode() {
+						vscode.postMessage({
+							command: 'undecorate'
+						});
+					}
 				</script>
 			</body>
 		</html>
@@ -105,7 +144,16 @@ function renderInlines(inlines: Inline[]): string {
 			return ` <code>${renderInlines(inline.inlines)}</code> `;
 		}
 		if(inline instanceof Link) {
-			return `<span data-bs-toggle="tooltip" title="${renderRange(inline.range)}">${renderInlines(inline.inlines)}</span>`; // omit `inline.classNames`
+			return `
+				<span
+					data-bs-toggle="tooltip"
+					title="${renderRange(inline.range)}"
+					onmouseover="decorateCode(${inline.range?.start.line}, ${inline.range?.start.character}, ${inline.range?.end.line}, ${inline.range?.end.character})"		
+					onmouseout="undecorateCode()"
+				>
+					${renderInlines(inline.inlines)}
+				</span>
+			`; // omit `inline.classNames`
 		}
 		if(inline instanceof Sbst) {
 			return `${renderInlines(inline.inlines)}` // omit `inline.iDontKnowWhatThisIs`

@@ -20,7 +20,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		{ scheme: 'file', language: 'guabao' },
 		{
 			provideInlayHints(document, range, token): vscode.InlayHint[] {
-				if (editor === vscode.window.activeTextEditor) {
+				if (editor === vscode.window.visibleTextEditors[0]) {
 					const specs = getSpecs(response);
 					let inlayHints = specs.flatMap(s => [new vscode.InlayHint(s.range.start, s.pre), new vscode.InlayHint(s.range.end, s.post)])
 					return inlayHints;
@@ -34,14 +34,16 @@ export async function activate(context: vscode.ExtensionContext) {
 	// This is the code for 'Guabao start'.
 	// The below disposables register other commands.
 	const startDisposable = vscode.commands.registerCommand('guabaovlang.start', () => {
-		// Store the current editor in a variable.
-		editor = vscode.window.activeTextEditor;
+		// Store the first editor in a variable.
+		editor = vscode.window.visibleTextEditors[0];
 		// If none of the tabs has name "GB Webview" ...
 		if(vscode.window.tabGroups.all.flatMap(group => group.tabs).filter(tab => tab.label === "GB Webview").length === 0) {
 			// Initialize the panel.
 			panelProvider.createPanel();
+			// Handle message sent from webview such as decoration.
+			panelProvider.receiveMessage(context);
 			// For testing. The below line prints the text in the current editor.
-			panelProvider.format(vscode.window.activeTextEditor?.document.getText() || "", context.extensionPath);
+			panelProvider.format(vscode.window.visibleTextEditors[0]?.document.getText() || "", context.extensionPath);
 			// We prevent focusing on the panel instead of the text editor.
 			vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
 		}
@@ -50,10 +52,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const reloadDisposable = vscode.commands.registerCommand('guabaovlang.reload', async () => {
 		if(panelProvider.initiated()) {
-			// Store the current editor in a variable.
-			editor = vscode.window.activeTextEditor;
+			// Store the first editor in a variable.
+			editor = vscode.window.visibleTextEditors[0];
 			// Get the path for the current text file.
-			const path = vscode.window.activeTextEditor?.document.uri.fsPath;
+			const path = vscode.window.visibleTextEditors[0]?.document.uri.fsPath;
 			// Send the request asynchronously.
 			response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
 			// Parse the response using functions in section.ts.
@@ -74,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		// TODO: refactor the boilerplate out of the functions.
 		// Currently there is a bug that prevents me from doing this.
 
-		const editor = vscode.window.activeTextEditor
+		const editor = vscode.window.visibleTextEditors[0]
 		const path = editor?.document.uri.fsPath;
 		const selection = editor?.selection;
 		// Note that the position is prone to off-by-one error.
@@ -103,7 +105,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		// Check if the panel is present before doing anything else.
 		if(panelProvider.initiated()) {
 			// Same as above.
-			const editor = vscode.window.activeTextEditor
+			const editor = vscode.window.visibleTextEditors[0]
 			const path = editor?.document.uri.fsPath;
 			const selection = editor?.selection;
 			const startLine = (selection?.start.line ?? 0) + 1;
@@ -120,7 +122,7 @@ export async function activate(context: vscode.ExtensionContext) {
 							[path, startLine, startChar, startOff],
 							[path, endLine, endChar, endOff],
 						],
-						"GARBAGE"
+						"GARBAGE" // TODO: This should not be GARBAGE. 
 					]
 				}
 			]);
@@ -138,7 +140,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	// This is only for testing purpose.
 	const helloWorldDisposable = vscode.commands.registerCommand('guabaovlang.helloworld', async () => {
 
-		const editor = vscode.window.activeTextEditor
+		const editor = vscode.window.visibleTextEditors[0]
 		const path = editor?.document.uri.fsPath;
 		const selection = editor?.selection;
 		const startLine = (selection?.start.line ?? 0) + 1;
