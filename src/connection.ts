@@ -1,16 +1,10 @@
-/* This module handles connections between the following components:
-  + LSP Server
-  + WebViewPanel
-  + Extension main
- */
+// This module handles connections:
 
 import * as vscode from "vscode";
-import * as path from 'path';
 import { LanguageClient,
 	LanguageClientOptions,
 	ServerOptions,
 	TransportKind } from "vscode-languageclient/node";
-import { activate } from "./extension";
 
 let client: LanguageClient;
 
@@ -41,7 +35,7 @@ export function start(serverModule:string) {
 
 	// Options to control the language client
 	const clientOptions: LanguageClientOptions = {
-		// Register the server for plain text documents
+		// Register the server for 'guabao' documents
 		documentSelector: [{ scheme: 'file', language: 'guabao' }],
 		synchronize: {
 			// Notify the server about file changes to '.gcl' files contained in the workspace

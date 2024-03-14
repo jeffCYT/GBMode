@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 
+// Classes and types for parsing `ResDisplay`.
+
 export class Section {
     constructor(public deco : 'Plain' | 'Red' | 'Yellow' | 'Blue' | 'Green', public blocks: Block[]) {}
 }
@@ -61,6 +63,7 @@ export class PrHz {
     constructor(public columns: Inline[][]) {}
 }
 
+// The below code turns JSON into the above types / classes
 
 export function getSections(response: any): Section[] {
     const sections = response.contents[1].filter((m: any) => m.tag === "ResDisplay")[0].contents[1]

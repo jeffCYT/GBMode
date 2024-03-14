@@ -5,7 +5,7 @@ import * as path from 'path';
 export class PanelProvider {
 	static panel: vscode.WebviewPanel;
 	initiated(): boolean {
-		return !(PanelProvider.panel === undefined)
+		return PanelProvider.panel !== undefined
 	}
 	createPanel(): void {
 		console.log(PanelProvider.panel);
@@ -13,6 +13,8 @@ export class PanelProvider {
 		                                                       vscode.ViewColumn.Two, { enableScripts: true });
 	}
 	format(content: Section[] | string, extPath: string): void {
+		// This is for debugging purpose.
+		// If the argument is a string instead of a section, we print it out in the simplest way.
 		if(typeof content === 'string') {
 			PanelProvider.panel.webview.html = `<!DOCTYPE html><html lang="en"><head></head><body><h2>Testing GB</h2><p>${content}</p></body></html>`;
 		} else if (content.every(it => it instanceof Section)){
@@ -20,6 +22,8 @@ export class PanelProvider {
 		}
 	}
 }
+
+// The below renderXXXXX functions turn the parsed data structure into HTML.
 
 function renderSections(sections: Section[], extPath: string): string {
 	const webview = PanelProvider.panel.webview;
@@ -124,6 +128,7 @@ function renderRange(range: vscode.Range | undefined): string {
 	return `${adjustLineOrChar(range?.start.line)}:${adjustLineOrChar(range?.start.character)}-${adjustLineOrChar(range?.end.line)}:${adjustLineOrChar(range?.end.character)}`
 }
 
+// This fixes the off-by-one error.
 function adjustLineOrChar(num: number | undefined): number | undefined {
 	if(num === undefined) {
 		return undefined;

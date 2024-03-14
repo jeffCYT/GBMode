@@ -1,3 +1,5 @@
+// This module handles specs for holes.
+
 import * as vscode from 'vscode';
 
 class Spec {
