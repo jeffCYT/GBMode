@@ -92,13 +92,13 @@ function renderSections(sections: Section[], extPath: string): string {
 			case 'Plain':
 				return `<div class="border rounded p-3">${renderBlocks(section.blocks)}</div>`;
 			case 'Red':
-				return `<div class="text-danger border rounded p-3">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="bg-danger border rounded p-3">${renderBlocks(section.blocks)}</div>`;
 			case 'Yellow':
-				return `<div class="text-warning border rounded p-3">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="bg-warning border rounded p-3">${renderBlocks(section.blocks)}</div>`;
 			case 'Blue':
-				return `<div class="text-primary border rounded p-3">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="bg-primary border rounded p-3">${renderBlocks(section.blocks)}</div>`;
 			case 'Green':
-				return `<div class="text-success border rounded p-3">${renderBlocks(section.blocks)}</div>`;
+				return `<div class="bg-success border rounded p-3">${renderBlocks(section.blocks)}</div>`;
 		}
 	}).join('<br>')
 
@@ -112,7 +112,9 @@ function renderSections(sections: Section[], extPath: string): string {
 				<link rel='stylesheet' type='text/css' href='${styleUri}'>
 			</head>
 			<body>
-				${content}
+				<div class="container p-3">
+					${content}
+				</div>
 				<script>
 					const vscode = acquireVsCodeApi();
 					function decorateCode(startLine, startChar, endLine, endChar) {
@@ -150,10 +152,10 @@ function renderBlocks(blocks: Block[]): string {
 			return renderHeaderWithButtons(block);
 		}
 		if (block instanceof Paragraph) {
-			return `<div class="container">${renderInlines(block.inlines)}</div>`
+			return `<div>${renderInlines(block.inlines)}</div>`
 		}
 		if (block instanceof Code) {
-			return `<div class="container">${renderInlines(block.inlines)}</div>`
+			return `<div>${renderInlines(block.inlines)}</div>`
 		}
 	}).join("\n")
 }
