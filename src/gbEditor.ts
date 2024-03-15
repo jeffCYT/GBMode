@@ -1,6 +1,7 @@
 import { Section, Block, Header, HeaderWithButtons, Paragraph, Code, Inline, Icon, Text, Snpt, Link, Sbst, Horz, Vert, Parn } from './section'
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { sendRequest } from "./connection";
 
 export class PanelProvider {
 	static panel: vscode.WebviewPanel;
@@ -36,7 +37,7 @@ export class PanelProvider {
 			}
 		});
 		PanelProvider.panel.webview.onDidReceiveMessage(
-			message => {
+			async message => {
 				switch (message.command) {
 					case 'decorate':
 						vscode.window.visibleTextEditors[0].setDecorations(decorationType, [new vscode.Range(new vscode.Position(message.startLine, message.startChar), new vscode.Position(message.endLine, message.endChar))]);
@@ -44,11 +45,38 @@ export class PanelProvider {
 					case 'undecorate':
 						vscode.window.visibleTextEditors[0].setDecorations(decorationType, []);
 						return;
+					case 'insertProofTemplate':
+						// TODO: refactor the boilerplate out.
+						const editor = vscode.window.visibleTextEditors[0]
+						const path = editor?.document.uri.fsPath;
+						const selection = editor?.selection;
+						const startLine = (selection?.start.line ?? 0) + 1;
+						const startChar = (selection?.start.character ?? 0) + 1;
+						const startOff = editor?.document.offsetAt(selection?.start || new vscode.Position(0, 0));
+						const endLine = (selection?.end.line ?? 0) + 1;
+						const endChar = (selection?.end.character ?? 0) + 1;
+						const endOff = editor?.document.offsetAt(selection?.end || new vscode.Position(0, 0));
+
+						await sendRequest("guabao", [
+							path, { "tag": "ReqInsertProofTemplate",
+								"contents": [
+									[
+										[path, startLine, startChar, startOff],
+										[path, endLine, endChar, endOff]
+									],
+									message.hash
+								]
+							}
+						]);
+
+						vscode.commands.executeCommand('guabaovlang.reload')
+
+						return;
 				}
 			},
 			undefined,
 			context.subscriptions
-		  );
+		);
 	}
 }
 
@@ -101,6 +129,12 @@ function renderSections(sections: Section[], extPath: string): string {
 							command: 'undecorate'
 						});
 					}
+					function insertProofTemplate(hash) {
+						vscode.postMessage({
+							command: 'insertProofTemplate',
+							hash: hash
+						});
+					}
 				</script>
 			</body>
 		</html>
@@ -125,11 +159,13 @@ function renderBlocks(blocks: Block[]): string {
 }
 
 function renderHeader(header: Header): string {
-	return `<h2>${header.text} ${renderRange(header.range)}</h2>`
+	return `<h2 class="text-center">${header.text} ${renderRange(header.range)}</h2>`
 }
 
 function renderHeaderWithButtons(header: HeaderWithButtons): string {
-	return `<h2>${header.headerText} ${renderRange(header.headerLoc)} ${header.anchorText} ${renderRange(header.anchorLoc)}</h2>`
+	const buttonName = header.anchorLoc === undefined ? "Insert Proof Template" : renderRange(header.anchorLoc);
+	const disabled = header.anchorLoc === undefined ? "" : "disabled";
+	return `<h2 class="text-center">${header.headerText} ${renderRange(header.headerLoc)} <button type="button" class="btn btn-primary" onclick="insertProofTemplate('${header.anchorText}')" ${disabled}>${buttonName}</button></h2>`
 }
 
 function renderInlines(inlines: Inline[]): string {
