@@ -1,6 +1,7 @@
 import { Section, Block, Header, HeaderWithButtons, Paragraph, Code, Inline, Icon, Text, Snpt, Link, Sbst, Horz, Vert, Parn } from './section'
 import * as vscode from 'vscode';
-import * as path from 'path';
+import * as sysPath from 'path';
+import { retrieveMainEditor, genRangeWithOffset } from "./utils"
 import { sendRequest } from "./connection";
 import { getSubstitutions } from './substitute';
 
@@ -10,8 +11,13 @@ export class PanelProvider {
 		return PanelProvider.panel !== undefined
 	}
 	createPanel(): void {
-		PanelProvider.panel = vscode.window.createWebviewPanel("gbCustom.guabao", "GB Webview",
-		                                                       vscode.ViewColumn.Two, { enableScripts: true });
+		PanelProvider.panel =
+			vscode.window.createWebviewPanel(
+				"gbCustom.guabao",
+				"GB Webview",
+				vscode.ViewColumn.Two,
+				{ enableScripts: true }
+			);
 	}
 	format(content: Section[] | string, extPath: string): void {
 		// This is for debugging purpose.
@@ -47,36 +53,24 @@ export class PanelProvider {
 						vscode.window.visibleTextEditors[0].setDecorations(decorationType, []);
 						return;
 					case 'insertProofTemplate': {
-						// TODO: refactor the boilerplate out.
-						const editor = vscode.window.visibleTextEditors[0]
-						const path = editor?.document.uri.fsPath;
-						const selection = editor?.selection;
-						const startLine = (selection?.start.line ?? 0) + 1;
-						const startChar = (selection?.start.character ?? 0) + 1;
-						const startOff = editor?.document.offsetAt(selection?.start || new vscode.Position(0, 0));
-						const endLine = (selection?.end.line ?? 0) + 1;
-						const endChar = (selection?.end.character ?? 0) + 1;
-						const endOff = editor?.document.offsetAt(selection?.end || new vscode.Position(0, 0));
-
+						const range = genRangeWithOffset(retrieveMainEditor());
 						await sendRequest("guabao", [
-							path, { "tag": "ReqInsertProofTemplate",
+							range.path, { "tag": "ReqInsertProofTemplate",
 								"contents": [
 									[
-										[path, startLine, startChar, startOff],
-										[path, endLine, endChar, endOff]
+										[range.path, range.startLine, range.startChar, range.startOff],
+										[range.path, range.endLine, range.endChar, range.endOff]
 									],
 									message.hash
 								]
 							}
 						]);
-
-						vscode.commands.executeCommand('guabaovlang.reload')
-
+						vscode.commands.executeCommand('guabaovlang.reload');
 						return;
 					}
 					case 'substitute': {
 
-						const editor = vscode.window.visibleTextEditors[0]
+						const editor = retrieveMainEditor();
 						const path = editor?.document.uri.fsPath;
 
 						const response = await sendRequest("guabao", [
@@ -103,7 +97,7 @@ export class PanelProvider {
 
 function renderSections(sections: Section[], extPath: string): string {
 	const webview = PanelProvider.panel.webview;
-	const stylePathOnDisk = vscode.Uri.file(path.join(extPath, '/asset/bootstrap.min.css'));
+	const stylePathOnDisk = vscode.Uri.file(sysPath.join(extPath, '/asset/bootstrap.min.css'));
 	const styleUri = webview.asWebviewUri(stylePathOnDisk);
 
 	const content = sections.map(section => {
@@ -195,7 +189,7 @@ function renderBlocks(blocks: Block[]): string {
 }
 
 function renderHeader(header: Header): string {
-	return `<h2 class="text-center">${header.text} ${renderRange(header.range)}</h2>`
+	return `<h2 class="text-center">${header.text} ${renderRange(header.range) ?? ""}</h2>`
 }
 
 function renderHeaderWithButtons(header: HeaderWithButtons): string {
@@ -257,7 +251,11 @@ function renderInlines(inlines: Inline[]): string {
 }
 
 function renderRange(range: vscode.Range | undefined): string {
-	return `${adjustLineOrChar(range?.start.line)}:${adjustLineOrChar(range?.start.character)}-${adjustLineOrChar(range?.end.line)}:${adjustLineOrChar(range?.end.character)}`
+	if(range === undefined) {
+		return "";
+	} else {
+		return `${adjustLineOrChar(range?.start.line)}:${adjustLineOrChar(range?.start.character)}-${adjustLineOrChar(range?.end.line)}:${adjustLineOrChar(range?.end.character)}`
+	}
 }
 
 // This fixes the off-by-one error.

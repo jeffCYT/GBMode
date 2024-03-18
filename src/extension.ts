@@ -1,15 +1,14 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import * as path from 'path';
+import { retrieveMainEditor, genRangeWithOffset } from './utils'
 import { PanelProvider } from './gbEditor';
 import { start, stop, sendRequest } from "./connection";
 import { getSpecs } from './spec'
 import { getSections } from './section'
 
-let response: unknown;
-
-let editor: vscode.TextEditor | undefined;
+// We use a top-level variable for recording the current editor.
+// let editor: vscode.TextEditor | undefined;
 
 export async function activate(context: vscode.ExtensionContext) {
 	console.log('GuaBao VLang Mode is now active!');
@@ -20,9 +19,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		{ scheme: 'file', language: 'guabao' },
 		{
 			provideInlayHints(document, range, token): vscode.InlayHint[] {
-				if (editor === vscode.window.visibleTextEditors[0]) {
-					const specs = getSpecs(response);
-					let inlayHints = specs.flatMap(s => [new vscode.InlayHint(s.range.start, s.pre), new vscode.InlayHint(s.range.end, s.post)])
+				// We store the editor in a state.
+				if (context.workspaceState.get("editor") === retrieveMainEditor()) {
+					const specs = getSpecs(context.workspaceState.get("response"));
+					let inlayHints = specs.flatMap(s => [new vscode.InlayHint(s.range.start, ` ${s.pre} ⇒ ${s.post}`)])
 					return inlayHints;
 				} else {
 					return [];
@@ -32,10 +32,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	)
 
 	// This is the code for 'Guabao start'.
-	// The below disposables register other commands.
+	// The further below disposables register other commands.
 	const startDisposable = vscode.commands.registerCommand('guabaovlang.start', () => {
 		// Store the first editor in a variable.
-		editor = vscode.window.visibleTextEditors[0];
+		context.workspaceState.update("editor", retrieveMainEditor());
+		// TODO: Check for the presence of the panel in a more clever way.
 		// If none of the tabs has name "GB Webview" ...
 		if(vscode.window.tabGroups.all.flatMap(group => group.tabs).filter(tab => tab.label === "GB Webview").length === 0) {
 			// Initialize the panel.
@@ -50,14 +51,17 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(startDisposable);
 
+	// TODO: Fix a bug that after opening and then closing a panel, reloading generates an error.
 	const reloadDisposable = vscode.commands.registerCommand('guabaovlang.reload', async () => {
 		if(panelProvider.initiated()) {
-			// Store the first editor in a variable.
-			editor = vscode.window.visibleTextEditors[0];
+			// Store the main editor in a state.
+			context.workspaceState.update("editor", retrieveMainEditor());
 			// Get the path for the current text file.
-			const path = vscode.window.visibleTextEditors[0]?.document.uri.fsPath;
+			const path = (context.workspaceState.get("editor") as  vscode.TextEditor).document.uri.fsPath;
 			// Send the request asynchronously.
-			response = await sendRequest("guabao", [path, { "tag": "ReqReload" }]);
+			const response = await sendRequest("guabao", [path, { "tag": "ReqReload" }])
+			// We use the shared state to cache the response.
+			context.workspaceState.update("response", response);
 			// Parse the response using functions in section.ts.
 			const parsedResponse = getSections(response);
 			// Tell the panel provider to turn the parsed response into HTML.
@@ -73,27 +77,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const inspectDisposable = vscode.commands.registerCommand('guabaovlang.inspect', async () => {
 
-		// TODO: refactor the boilerplate out of the functions.
-		// Currently there is a bug that prevents me from doing this.
-
-		const editor = vscode.window.visibleTextEditors[0]
-		const path = editor?.document.uri.fsPath;
-		const selection = editor?.selection;
-		// Note that the position is prone to off-by-one error.
-		const startLine = (selection?.start.line ?? 0) + 1;
-		const startChar = (selection?.start.character ?? 0) + 1;
-		// Not sure if the default value Position(0, 0) is a good idea,
-		// but at least I haven't encountered any problems. 
-		const startOff = editor?.document.offsetAt(selection?.start || new vscode.Position(0, 0));
-		const endLine = (selection?.end.line ?? 0) + 1;
-		const endChar = (selection?.end.character ?? 0) + 1;
-		const endOff = editor?.document.offsetAt(selection?.end || new vscode.Position(0, 0));
+		let range = genRangeWithOffset(retrieveMainEditor());
 
 		await sendRequest("guabao", [
-			path, { "tag": "ReqInspect",
+			range.path, { "tag": "ReqInspect",
 				"contents": [
-					[path, startLine, startChar, startOff],
-					[path, endLine, endChar, endOff]
+					[range.path, range.startLine, range.startChar, range.startOff],
+					[range.path, range.endLine, range.endChar, range.endOff]
 				]
 			}
 		]);
@@ -104,23 +94,15 @@ export async function activate(context: vscode.ExtensionContext) {
 	const refineDisposable = vscode.commands.registerCommand('guabaovlang.refine', async () => {
 		// Check if the panel is present before doing anything else.
 		if(panelProvider.initiated()) {
-			// Same as above.
-			const editor = vscode.window.visibleTextEditors[0]
-			const path = editor?.document.uri.fsPath;
-			const selection = editor?.selection;
-			const startLine = (selection?.start.line ?? 0) + 1;
-			const startChar = (selection?.start.character ?? 0) + 1;
-			const startOff = editor?.document.offsetAt(selection?.start || new vscode.Position(0, 0));
-			const endLine = (selection?.end.line ?? 0) + 1;
-			const endChar = (selection?.end.character ?? 0) + 1;
-			const endOff = editor?.document.offsetAt(selection?.end || new vscode.Position(0, 0));
+			
+			let range = genRangeWithOffset(retrieveMainEditor());
 
 			const response = await sendRequest("guabao", [
-				path, { "tag": "ReqRefine2",
+				range.path, { "tag": "ReqRefine2",
 					"contents": [
 						[
-							[path, startLine, startChar, startOff],
-							[path, endLine, endChar, endOff],
+							[range.path, range.startLine, range.startChar, range.startOff],
+							[range.path, range.endLine, range.endChar, range.endOff],
 						],
 						"GARBAGE" // TODO: This should not be GARBAGE. 
 					]
@@ -140,21 +122,13 @@ export async function activate(context: vscode.ExtensionContext) {
 	// This is only for testing purpose.
 	const helloWorldDisposable = vscode.commands.registerCommand('guabaovlang.helloworld', async () => {
 
-		const editor = vscode.window.visibleTextEditors[0]
-		const path = editor?.document.uri.fsPath;
-		const selection = editor?.selection;
-		const startLine = (selection?.start.line ?? 0) + 1;
-		const startChar = (selection?.start.character ?? 0) + 1;
-		const startOff = editor?.document.offsetAt(selection?.start || new vscode.Position(0, 0));
-		const endLine = (selection?.end.line ?? 0) + 1;
-		const endChar = (selection?.end.character ?? 0) + 1;
-		const endOff = editor?.document.offsetAt(selection?.end || new vscode.Position(0, 0));
+		let range = genRangeWithOffset(retrieveMainEditor());
 
 		await sendRequest("guabao", [
-			path, { "tag": "ReqHelloWorld",
+			range.path, { "tag": "ReqHelloWorld",
 				"contents": [
-					[path, startLine, startChar, startOff],
-					[path, endLine, endChar, endOff]
+					[range.path, range.startLine, range.startChar, range.startOff],
+					[range.path, range.endLine, range.endChar, range.endOff]
 				]
 			}
 		]);
