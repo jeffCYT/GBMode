@@ -44,7 +44,7 @@ export class Link {
 }
 
 export class Sbst {
-    constructor(public iDontKnowWhatThisIs: number, public inlines: Inline[]) {}
+    constructor(public redexNumber: number, public inlines: Inline[]) {}
 }
 
 export class Horz {
@@ -89,7 +89,7 @@ function getBlocks(response: any): Block[] {
     })
 }
 
-function getInlines(response: any): Inline[] {
+export function getInlines(response: any): Inline[] {
     if(response) {
         let result: Inline[] = [];
         for(let content of (response as any[])) {

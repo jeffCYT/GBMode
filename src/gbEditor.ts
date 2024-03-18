@@ -2,6 +2,7 @@ import { Section, Block, Header, HeaderWithButtons, Paragraph, Code, Inline, Ico
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { sendRequest } from "./connection";
+import { getSubstitutions } from './substitute';
 
 export class PanelProvider {
 	static panel: vscode.WebviewPanel;
@@ -45,7 +46,7 @@ export class PanelProvider {
 					case 'undecorate':
 						vscode.window.visibleTextEditors[0].setDecorations(decorationType, []);
 						return;
-					case 'insertProofTemplate':
+					case 'insertProofTemplate': {
 						// TODO: refactor the boilerplate out.
 						const editor = vscode.window.visibleTextEditors[0]
 						const path = editor?.document.uri.fsPath;
@@ -72,6 +73,24 @@ export class PanelProvider {
 						vscode.commands.executeCommand('guabaovlang.reload')
 
 						return;
+					}
+					case 'substitute': {
+
+						const editor = vscode.window.visibleTextEditors[0]
+						const path = editor?.document.uri.fsPath;
+
+						const response = await sendRequest("guabao", [
+							path, { "tag": "ReqSubstitute",
+								"contents": message.redexNumber
+							}
+						]);
+						
+						const substitutions = getSubstitutions(response);
+						substitutions.map(sub =>
+							PanelProvider.panel.webview.postMessage({ command: 'renderSubstitution', redexNumber: sub.redexNumber, inlines: renderInlines(sub.inlines) })
+						);
+
+					}
 				}
 			},
 			undefined,
@@ -137,6 +156,21 @@ function renderSections(sections: Section[], extPath: string): string {
 							hash: hash
 						});
 					}
+					function notifySubstitute(number) {
+						vscode.postMessage({
+							command: 'substitute',
+							redexNumber: number
+						});
+					}
+					window.addEventListener('message', event => {
+						const message = event.data; // The JSON data our extension sent
+						const redexNumber = message.redexNumber;
+						switch (message.command) {
+							case 'renderSubstitution':
+								document.getElementById("redex" + redexNumber).outerHTML = message.inlines;
+								break;
+						}
+					});
 				</script>
 			</body>
 		</html>
@@ -167,13 +201,17 @@ function renderHeader(header: Header): string {
 function renderHeaderWithButtons(header: HeaderWithButtons): string {
 	const buttonName = header.anchorLoc === undefined ? "Insert Proof Template" : renderRange(header.anchorLoc);
 	const disabled = header.anchorLoc === undefined ? "" : "disabled";
-	return `<h2 class="text-center">${header.headerText} ${renderRange(header.headerLoc)} <button type="button" class="btn btn-primary" onclick="insertProofTemplate('${header.anchorText}')" ${disabled}>${buttonName}</button></h2>`
+	return `
+		<h2 class="text-center">
+			${header.headerText} ${renderRange(header.headerLoc)}
+			<button type="button" class="btn btn-primary" onclick="insertProofTemplate('${header.anchorText}')" ${disabled}>${buttonName}</button>
+		</h2>`
 }
 
 function renderInlines(inlines: Inline[]): string {
 	return inlines.map(inline => {
 		if(inline instanceof Icon) {
-			return "ICON";
+			return "ICON"; // Placeholder.
 		}
 		if(inline instanceof Text) {
 			return inline.text;
@@ -191,10 +229,18 @@ function renderInlines(inlines: Inline[]): string {
 				>
 					${renderInlines(inline.inlines)}
 				</span>
-			`; // omit `inline.classNames`
+			`; // Omit `inline.classNames` because I don't know what that is.
 		}
 		if(inline instanceof Sbst) {
-			return `${renderInlines(inline.inlines)}` // omit `inline.iDontKnowWhatThisIs`
+			return `
+				<span
+					onclick="notifySubstitute(${inline.redexNumber})"
+					id="redex${inline.redexNumber}"
+					style="cursor:pointer"
+				>
+					${renderInlines(inline.inlines)}
+				</span>
+			`
 		}
 		if(inline instanceof Horz) {
 			const columns = inline.columnns.map(col => renderInlines(col)).join("")
