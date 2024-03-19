@@ -1,14 +1,23 @@
 import * as vscode from 'vscode';
 
-export function retrieveMainEditor(): vscode.TextEditor {
-	return vscode.window.visibleTextEditors[0];
+// Simply using either vscode.window.activeTextEditor or vscode.window.visibleTextEditors[0] creates bugs.
+export function retrieveMainEditor(): vscode.TextEditor | undefined {
+    // I don't know why, but it works beautifully.
+    return vscode.window.visibleTextEditors[0].document.fileName !== 'tasks' ? vscode.window.visibleTextEditors[0] : vscode.window.visibleTextEditors[1];
+}
+
+export const guabaoLabel = "GB Webview";
+
+export function isGuabaoLabel(label: string): boolean {
+    return label === guabaoLabel
 }
 
 export class RangeWithOffset {
     constructor(public path: string, public startLine: number, public startChar: number, public startOff: number, public endLine: number, public endChar: number, public endOff: number) {}
 }
 
-export function genRangeWithOffset(editor: vscode.TextEditor): RangeWithOffset {
+// This function returns a RangeWithOffset object to be used in various places.
+export function genSelectionRangeWithOffset(editor: vscode.TextEditor): RangeWithOffset {
 	const path = editor?.document.uri.fsPath;
 	const selection = editor?.selection;
 	// Note that the position is prone to off-by-one error.

@@ -1,9 +1,13 @@
 import { Section, Block, Header, HeaderWithButtons, Paragraph, Code, Inline, Icon, Text, Snpt, Link, Sbst, Horz, Vert, Parn } from './section'
 import * as vscode from 'vscode';
 import * as sysPath from 'path';
-import { retrieveMainEditor, genRangeWithOffset } from "./utils"
+import { retrieveMainEditor, guabaoLabel, genSelectionRangeWithOffset } from "./utils"
 import { sendRequest } from "./connection";
 import { getSubstitutions } from './substitute';
+
+export class Welcome {
+	constructor() {}
+}
 
 export class PanelProvider {
 	static panel: vscode.WebviewPanel;
@@ -14,32 +18,35 @@ export class PanelProvider {
 		PanelProvider.panel =
 			vscode.window.createWebviewPanel(
 				"gbCustom.guabao",
-				"GB Webview",
-				vscode.ViewColumn.Two,
+				guabaoLabel,
+				{ preserveFocus: true, viewColumn: vscode.ViewColumn.Two },
 				{ enableScripts: true }
 			);
+		
 	}
-	format(content: Section[] | string, extPath: string): void {
-		// This is for debugging purpose.
-		// If the argument is a string instead of a section, we print it out in the simplest way.
-		if(typeof content === 'string') {
-			PanelProvider.panel.webview.html = `<!DOCTYPE html><html lang="en"><head></head><body><h2>Testing GB</h2><p>${content}</p></body></html>`;
+	// Show either the welcome page or sections (likely from the LSP server).
+	show(content: Welcome | Section[], extPath: string): void {
+		if (content instanceof Welcome) {
+			PanelProvider.panel.webview.html = renderWelcome(extPath);
 		} else if (content.every(it => it instanceof Section)){
 			PanelProvider.panel.webview.html = renderSections(content, extPath);
 		}
 	}
+	// This method handles message sent from within the webview.
 	receiveMessage(context: vscode.ExtensionContext) {
+		// The decoration type we want to use later.
+		// It could not be declared inside the async callback because it would then create different objects every time. 
 		const decorationType = vscode.window.createTextEditorDecorationType({
 			borderWidth: '1px',
 			borderStyle: 'solid',
 			overviewRulerColor: 'blue',
 			overviewRulerLane: vscode.OverviewRulerLane.Right,
 			light: {
-				// this color will be used in light color themes
+				// This color will be used in light color themes.
 				borderColor: 'darkblue'
 			},
 			dark: {
-				// this color will be used in dark color themes
+				// This color will be used in dark color themes.
 				borderColor: 'lightblue'
 			}
 		});
@@ -47,25 +54,30 @@ export class PanelProvider {
 			async message => {
 				switch (message.command) {
 					case 'decorate':
-						vscode.window.visibleTextEditors[0].setDecorations(decorationType, [new vscode.Range(new vscode.Position(message.startLine, message.startChar), new vscode.Position(message.endLine, message.endChar))]);
+						// Currently, we pass the four arguments of the range 1-by-1.
+						// With some modification, it might be possible to pass the whole range all at once.
+						retrieveMainEditor()?.setDecorations(decorationType, [new vscode.Range(new vscode.Position(message.startLine, message.startChar), new vscode.Position(message.endLine, message.endChar))]);
 						return;
+					// Reset the decoration when the mouse moves out.
 					case 'undecorate':
-						vscode.window.visibleTextEditors[0].setDecorations(decorationType, []);
+						retrieveMainEditor()?.setDecorations(decorationType, []);
 						return;
 					case 'insertProofTemplate': {
-						const range = genRangeWithOffset(retrieveMainEditor());
+						const editor = retrieveMainEditor();
+						const range = editor ? genSelectionRangeWithOffset(editor) : undefined;
 						await sendRequest("guabao", [
-							range.path, { "tag": "ReqInsertProofTemplate",
+							range?.path, { "tag": "ReqInsertProofTemplate",
 								"contents": [
 									[
-										[range.path, range.startLine, range.startChar, range.startOff],
-										[range.path, range.endLine, range.endChar, range.endOff]
+										[range?.path, range?.startLine, range?.startChar, range?.startOff],
+										[range?.path, range?.endLine, range?.endChar, range?.endOff]
 									],
 									message.hash
 								]
 							}
 						]);
 						vscode.commands.executeCommand('guabaovlang.reload');
+						vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
 						return;
 					}
 					case 'substitute': {
@@ -83,6 +95,8 @@ export class PanelProvider {
 						substitutions.map(sub =>
 							PanelProvider.panel.webview.postMessage({ command: 'renderSubstitution', redexNumber: sub.redexNumber, inlines: renderInlines(sub.inlines) })
 						);
+						vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
+						return;
 
 					}
 				}
@@ -95,12 +109,38 @@ export class PanelProvider {
 
 // The below renderXXXXX functions turn the parsed data structure into HTML.
 
-function renderSections(sections: Section[], extPath: string): string {
+function renderWelcome(extPath: string): string {
 	const webview = PanelProvider.panel.webview;
 	const stylePathOnDisk = vscode.Uri.file(sysPath.join(extPath, '/asset/bootstrap.min.css'));
 	const styleUri = webview.asWebviewUri(stylePathOnDisk);
 
+	const welcomeMsg: string = `
+		<!DOCTYPE html>
+		<html lang="en" data-bs-theme="dark">
+			<head>
+				<title>${guabaoLabel}</title>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<link rel='stylesheet' type='text/css' href='${styleUri}'>
+			</head>
+			<body>
+				<div class="container p-3">
+					<h2 class="text-center">You started Guabao!</h2>
+				</div>
+			</body>
+		</html>
+	`
+	return welcomeMsg;
+}
+
+function renderSections(sections: Section[], extPath: string): string {
+	const webview = PanelProvider.panel.webview;
+	// The CSS file path.
+	const stylePathOnDisk = vscode.Uri.file(sysPath.join(extPath, '/asset/bootstrap.min.css'));
+	const styleUri = webview.asWebviewUri(stylePathOnDisk);
+
 	const content = sections.map(section => {
+		// These are the colors we may receive and render.
 		switch(section.deco) {
 			case 'Plain':
 				return `<div class="border rounded p-3">${renderBlocks(section.blocks)}</div>`;
@@ -115,11 +155,51 @@ function renderSections(sections: Section[], extPath: string): string {
 		}
 	}).join('<br>')
 
+	// These are the Javascript functions to bridge the webview and the extension.
+	const script = `
+		const vscode = acquireVsCodeApi();
+		function decorateCode(startLine, startChar, endLine, endChar) {
+			vscode.postMessage({
+				command: 'decorate',
+				startLine: startLine,
+				startChar: startChar,
+				endLine: endLine,
+				endChar: endChar
+			});
+		}
+		function undecorateCode() {
+			vscode.postMessage({
+				command: 'undecorate'
+			});
+		}
+		function insertProofTemplate(hash) {
+			vscode.postMessage({
+				command: 'insertProofTemplate',
+				hash: hash
+			});
+		}
+		function notifySubstitute(number) {
+			vscode.postMessage({
+				command: 'substitute',
+				redexNumber: number
+			});
+		}
+		window.addEventListener('message', event => {
+			const message = event.data; // The JSON data our extension sent
+			const redexNumber = message.redexNumber;
+			switch (message.command) {
+				case 'renderSubstitution':
+					document.getElementById("redex" + redexNumber).outerHTML = message.inlines;
+					break;
+			}
+		});
+	`
+
 	return `
 		<!DOCTYPE html>
 		<html lang="en" data-bs-theme="dark">
 			<head>
-				<title>GB Webview</title>
+				<title>${guabaoLabel}</title>
 				<meta charset="UTF-8">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<link rel='stylesheet' type='text/css' href='${styleUri}'>
@@ -129,48 +209,14 @@ function renderSections(sections: Section[], extPath: string): string {
 					${content}
 				</div>
 				<script>
-					const vscode = acquireVsCodeApi();
-					function decorateCode(startLine, startChar, endLine, endChar) {
-						vscode.postMessage({
-							command: 'decorate',
-							startLine: startLine,
-							startChar: startChar,
-							endLine: endLine,
-							endChar: endChar
-						});
-					}
-					function undecorateCode() {
-						vscode.postMessage({
-							command: 'undecorate'
-						});
-					}
-					function insertProofTemplate(hash) {
-						vscode.postMessage({
-							command: 'insertProofTemplate',
-							hash: hash
-						});
-					}
-					function notifySubstitute(number) {
-						vscode.postMessage({
-							command: 'substitute',
-							redexNumber: number
-						});
-					}
-					window.addEventListener('message', event => {
-						const message = event.data; // The JSON data our extension sent
-						const redexNumber = message.redexNumber;
-						switch (message.command) {
-							case 'renderSubstitution':
-								document.getElementById("redex" + redexNumber).outerHTML = message.inlines;
-								break;
-						}
-					});
+					${script}
 				</script>
 			</body>
 		</html>
 	`;
 }
 
+// TODO: Fix a bug that code inlines have an extra appending space.
 function renderBlocks(blocks: Block[]): string {
 	return blocks.map(block => {
 		if (block instanceof Header) {
@@ -189,7 +235,7 @@ function renderBlocks(blocks: Block[]): string {
 }
 
 function renderHeader(header: Header): string {
-	return `<h2 class="text-center">${header.text} ${renderRange(header.range) ?? ""}</h2>`
+	return `<h2 class="text-center">${header.text} ${renderRange(header.range) ?? ""}</h2>`;
 }
 
 function renderHeaderWithButtons(header: HeaderWithButtons): string {
@@ -199,7 +245,8 @@ function renderHeaderWithButtons(header: HeaderWithButtons): string {
 		<h2 class="text-center">
 			${header.headerText} ${renderRange(header.headerLoc)}
 			<button type="button" class="btn btn-primary" onclick="insertProofTemplate('${header.anchorText}')" ${disabled}>${buttonName}</button>
-		</h2>`
+		</h2>
+	`;
 }
 
 function renderInlines(inlines: Inline[]): string {

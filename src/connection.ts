@@ -8,9 +8,6 @@ import { LanguageClient,
 
 let client: LanguageClient;
 
-
-// var status = Disconnected | Connecting | Connected;
-
 export function stop() {
 	client.stop()
 }
@@ -27,7 +24,7 @@ function onError() {
 
 }
 
-export function start(serverModule:string) {
+export function start(serverModule: string) {
 	const serverOptions: ServerOptions = {
 		run: { command: "gcl", transport: TransportKind.stdio },
 		debug: { command: "gcl", transport: TransportKind.stdio }
