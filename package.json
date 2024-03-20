@@ -75,7 +75,13 @@
         "title": "GuaBao Inspect"
       }
     ],
-    "keybindings": []
+    "keybindings": [
+      {
+          "command": "guabaovlang.refine",
+          "key": "ctrl+c ctrl+r",
+          "mac": "cmd+c cmd+r"
+      }
+  ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

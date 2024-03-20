@@ -2,8 +2,9 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { retrieveMainEditor, genSelectionRangeWithOffset, isGuabaoLabel } from './utils'
-import { Welcome, PanelProvider } from './gbEditor';
 import { start, stop, sendRequest } from "./connection";
+import { getSpecRange, specContent } from "./refine";
+import { Welcome, PanelProvider } from './gbEditor';
 import { getSpecs } from './spec'
 import { getSections } from './section'
 
@@ -94,22 +95,23 @@ export async function activate(context: vscode.ExtensionContext) {
 		if(panelProvider.initiated()) {
 			
 			const editor = retrieveMainEditor();
-			const range = editor ? genSelectionRangeWithOffset(editor) : undefined;
-
-			const response = await sendRequest("guabao", [
-				range?.path, { "tag": "ReqRefine2",
-					"contents": [
-						[
-							[range?.path, range?.startLine, range?.startChar, range?.startOff],
-							[range?.path, range?.endLine, range?.endChar, range?.endOff],
-						],
-						"GARBAGE" // TODO: This should not be GARBAGE. 
-					]
-				}
-			]);
-
-			const parsedResponse = getSections(response);
-			panelProvider.show(parsedResponse, context.extensionPath);
+			const selectionRange = editor ? genSelectionRangeWithOffset(editor) : undefined;
+			let specRange = getSpecRange(editor, selectionRange);
+			
+			if(specRange !== undefined) {
+				const response = await sendRequest("guabao", [
+					selectionRange?.path, { "tag": "ReqRefine2",
+						"contents": [
+							specRange?.toJson(),
+							editor?.document.getText(specContent(specRange)?.toVscodeRange()) // TODO: This should not be GARBAGE. 
+						]
+					}
+				]);
+				const parsedResponse = getSections(response);
+				panelProvider.show(parsedResponse, context.extensionPath);
+			} else {
+				vscode.window.showInformationMessage("Cannot refine.");
+			}
 
 		} else {
 			vscode.window.showInformationMessage("Please run 'Guabao start' first!");

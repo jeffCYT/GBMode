@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 // Simply using either vscode.window.activeTextEditor or vscode.window.visibleTextEditors[0] creates bugs.
 export function retrieveMainEditor(): vscode.TextEditor | undefined {
     // I don't know why, but it works beautifully.
+    // P.S. Vince suggested that a text editor contains several tabs, and we should access the path of the tabs instead of that of the editor.
     return vscode.window.visibleTextEditors[0].document.fileName !== 'tasks' ? vscode.window.visibleTextEditors[0] : vscode.window.visibleTextEditors[1];
 }
 
@@ -14,6 +15,18 @@ export function isGuabaoLabel(label: string): boolean {
 
 export class RangeWithOffset {
     constructor(public path: string, public startLine: number, public startChar: number, public startOff: number, public endLine: number, public endChar: number, public endOff: number) {}
+    toJson() {
+        return [
+            [this.path, this.startLine, this.startChar, this.startOff],
+            [this.path, this.endLine, this.endChar, this.endOff]
+        ];
+    }
+    toVscodeRange() {
+        return new vscode.Range(
+            new vscode.Position(this.startLine - 1, this.startChar - 1),
+            new vscode.Position(this.endLine - 1, this.endChar - 1)
+        );
+    }
 }
 
 // This function returns a RangeWithOffset object to be used in various places.

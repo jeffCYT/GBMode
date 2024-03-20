@@ -231,7 +231,7 @@ function renderBlocks(blocks: Block[]): string {
 		if (block instanceof Code) {
 			return `<div>${renderInlines(block.inlines)}</div>`
 		}
-	}).join("\n")
+	}).join("<br>")
 }
 
 function renderHeader(header: Header): string {
@@ -243,7 +243,7 @@ function renderHeaderWithButtons(header: HeaderWithButtons): string {
 	const disabled = header.anchorLoc === undefined ? "" : "disabled";
 	return `
 		<h2 class="text-center">
-			${header.headerText} ${renderRange(header.headerLoc)}
+			${header.headerText} ${renderRange(header.headerLoc) ?? ""}
 			<button type="button" class="btn btn-primary" onclick="insertProofTemplate('${header.anchorText}')" ${disabled}>${buttonName}</button>
 		</h2>
 	`;
