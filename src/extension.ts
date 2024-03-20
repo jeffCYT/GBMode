@@ -14,7 +14,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Provide inlay hints for the text editor.
 	// TODO: Fully display long inlay hints.
-	// P.S. This doesn't seem to be solvable with the current VSCode version. We have to wait.
+	// ^^^^^ P.S. This doesn't seem to be solvable with the current VSCode version. We have to wait.
+	// TODO: Do not display inlay artifacts.
 	vscode.languages.registerInlayHintsProvider(
 		{ scheme: 'file', language: 'guabao' },
 		{
@@ -103,7 +104,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					selectionRange?.path, { "tag": "ReqRefine2",
 						"contents": [
 							specRange?.toJson(),
-							editor?.document.getText(specContent(specRange)?.toVscodeRange()) // TODO: This should not be GARBAGE. 
+							editor?.document.getText(specContent(specRange)?.toVscodeRange()).trim()
 						]
 					}
 				]);
