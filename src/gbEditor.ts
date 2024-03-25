@@ -216,7 +216,6 @@ function renderSections(sections: Section[], extPath: string): string {
 	`;
 }
 
-// TODO: Fix a bug that code inlines have an extra appending space.
 function renderBlocks(blocks: Block[]): string {
 	return blocks.map(block => {
 		if (block instanceof Header) {
@@ -267,10 +266,7 @@ function renderInlines(inlines: Inline[]): string {
 					title="${renderRange(inline.range)}"
 					onmouseover="decorateCode(${inline.range?.start.line}, ${inline.range?.start.character}, ${inline.range?.end.line}, ${inline.range?.end.character})"		
 					onmouseout="undecorateCode()"
-				>
-					${renderInlines(inline.inlines)}
-				</span>
-			`; // Omit `inline.classNames` because I don't know what that is.
+				>${renderInlines(inline.inlines)}</span>`; // Omit `inline.classNames` because I don't know what that is.
 		}
 		if(inline instanceof Sbst) {
 			return `
@@ -278,10 +274,7 @@ function renderInlines(inlines: Inline[]): string {
 					onclick="notifySubstitute(${inline.redexNumber})"
 					id="redex${inline.redexNumber}"
 					style="cursor:pointer"
-				>
-					${renderInlines(inline.inlines)}
-				</span>
-			`
+				>${renderInlines(inline.inlines)}</span>`;
 		}
 		if(inline instanceof Horz) {
 			const columns = inline.columnns.map(col => renderInlines(col)).join("")
