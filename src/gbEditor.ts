@@ -241,10 +241,16 @@ function renderHeaderWithButtons(header: HeaderWithButtons): string {
 	const buttonName = header.anchorLoc === undefined ? "Insert Proof Template" : renderRange(header.anchorLoc);
 	const disabled = header.anchorLoc === undefined ? "" : "disabled";
 	return `
-		<h2 class="text-center">
-			${header.headerText} ${renderRange(header.headerLoc) ?? ""}
-			<button type="button" class="btn btn-primary" onclick="insertProofTemplate('${header.anchorText}')" ${disabled}>${buttonName}</button>
-		</h2>
+		<div class="container text-center">
+			<div class="row">
+				<div class="col col-sm-7">
+					<h2 class="text-center">${header.headerText} ${renderRange(header.headerLoc) ?? ""}</h2>
+				</div>
+				<div class="col col-sm-5">
+					<button type="button" class="btn btn-primary" onclick="insertProofTemplate('${header.anchorText}')" ${disabled}>${buttonName}</button>
+				</div>
+			</div>
+		</div>
 	`;
 }
 
