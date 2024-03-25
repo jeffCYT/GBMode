@@ -285,7 +285,7 @@ function renderInlines(inlines: Inline[]): string {
 			return `<br><div class="text-center">${rows}</div><br>`;
 		}
 		if(inline instanceof Parn) {
-			return `(${renderInlines(inline.inlines)})`;
+			return `( ${renderInlines(inline.inlines)} )`;
 		}
 	}).join("")
 }
