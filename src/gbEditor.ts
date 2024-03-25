@@ -243,10 +243,10 @@ function renderHeaderWithButtons(header: HeaderWithButtons): string {
 	return `
 		<div class="container text-center">
 			<div class="row">
-				<div class="col col-sm-7">
+				<div class="col col-sm-6">
 					<h2 class="text-center">${header.headerText} ${renderRange(header.headerLoc) ?? ""}</h2>
 				</div>
-				<div class="col col-sm-5">
+				<div class="col col-sm-6">
 					<button type="button" class="btn btn-primary" onclick="insertProofTemplate('${header.anchorText}')" ${disabled}>${buttonName}</button>
 				</div>
 			</div>
