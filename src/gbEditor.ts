@@ -112,7 +112,7 @@ function themeAttr(): string {
 	switch(vscode.window.activeColorTheme.kind) {
 		case vscode.ColorThemeKind.Light:
 		case vscode.ColorThemeKind.HighContrastLight:
-			theme = '';
+			theme = 'data-bs-theme="light"';
 			break;
 		case vscode.ColorThemeKind.Dark:
 		case vscode.ColorThemeKind.HighContrast:
