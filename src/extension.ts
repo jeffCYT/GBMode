@@ -23,7 +23,9 @@ export async function activate(context: vscode.ExtensionContext) {
 				// We check the editor in the state is what we really want. Else, do nothing.
 				if (context.workspaceState.get("editor") === retrieveMainEditor()) {
 					const specs = getSpecs(context.workspaceState.get("response"));
-					const inlayHints = specs.flatMap(s => [new vscode.InlayHint(s.range.start, ` ${s.pre} ⇒ ${s.post}`)])
+					const inlayHints = specs.flatMap(s => 
+						[new vscode.InlayHint(s.range.start, ` ${s.pre}`), new vscode.InlayHint(s.range.end, `${s.post} `)]
+					);
 					return inlayHints;
 				} else {
 					return [];
