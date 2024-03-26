@@ -107,16 +107,31 @@ export class PanelProvider {
 	}
 }
 
+function themeAttr(): string {
+	let theme;
+	switch(vscode.window.activeColorTheme.kind) {
+		case vscode.ColorThemeKind.Light:
+		case vscode.ColorThemeKind.HighContrastLight:
+			theme = '';
+			break;
+		case vscode.ColorThemeKind.Dark:
+		case vscode.ColorThemeKind.HighContrast:
+			theme = 'data-bs-theme="dark"';
+			break;
+	}
+	return theme;
+}
+
 // The below renderXXXXX functions turn the parsed data structure into HTML.
 
 function renderWelcome(extPath: string): string {
 	const webview = PanelProvider.panel.webview;
 	const stylePathOnDisk = vscode.Uri.file(sysPath.join(extPath, '/asset/bootstrap.min.css'));
 	const styleUri = webview.asWebviewUri(stylePathOnDisk);
-
+	
 	const welcomeMsg: string = `
 		<!DOCTYPE html>
-		<html lang="en" data-bs-theme="dark">
+		<html lang="en" ${themeAttr()}>
 			<head>
 				<title>${guabaoLabel}</title>
 				<meta charset="UTF-8">
@@ -197,7 +212,7 @@ function renderSections(sections: Section[], extPath: string): string {
 
 	return `
 		<!DOCTYPE html>
-		<html lang="en" data-bs-theme="dark">
+		<html lang="en" ${themeAttr()}>
 			<head>
 				<title>${guabaoLabel}</title>
 				<meta charset="UTF-8">
